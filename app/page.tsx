@@ -90,6 +90,7 @@ export default function Home() {
                 <p className="text-lg mb-8" style={{ color: 'var(--muted-foreground)' }}>
                   Тебе необходимо войти в аккаунт или зарегистрироваться, тупень
                 </p>
+                
               </div>
             </div>
           )}
