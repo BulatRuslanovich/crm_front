@@ -4,9 +4,10 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import ThemeToggle from './components/ThemeToggle';
 import UserDashboard from './components/UserDashboard';
+import { Activity } from 'lucide-react';
 
 export default function Home() {
-  const [user, setUser] = useState<{firstName: string, lastName: string, middleName: string, login: string} | null>(null);
+  const [user, setUser] = useState<{id: number, firstName: string, lastName: string, middleName: string, login: string} | null>(null);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -33,9 +34,17 @@ export default function Home() {
               <ThemeToggle />
               {user ? (
                 <>
-                  <span className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
-                    Привет, {user.firstName} {user.lastName}!
-                  </span>
+                  <Link
+                    href="/activities"
+                    className="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover-lift flex items-center gap-2"
+                    style={{ 
+                      color: 'var(--foreground)',
+                      background: 'transparent'
+                    }}
+                  >
+                    <Activity size={16} />
+                    Мои активности
+                  </Link>
                   <button
                     onClick={handleLogout}
                     className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover-lift"
@@ -85,10 +94,10 @@ export default function Home() {
             <div className="card rounded-xl p-8 fade-in">
               <div className="text-center">
                 <h2 className="text-3xl font-bold mb-4 gradient-text">
-                  Добро пожаловать в CRM епта!
+                  Добро пожаловать в CRM!
                 </h2>
                 <p className="text-lg mb-8" style={{ color: 'var(--muted-foreground)' }}>
-                  Тебе необходимо войти в аккаунт или зарегистрироваться, тупень
+                  Тебе необходимо войти в аккаунт или зарегистрироваться
                 </p>
                 
               </div>
