@@ -7,43 +7,56 @@
   <img src="https://img.shields.io/badge/React-19.1.0-blue?style=for-the-badge" alt="React" />
   <img src="https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge" alt="TypeScript" />
   <img src="https://img.shields.io/badge/Tailwind%20CSS-4.0-38B2AC?style=for-the-badge" alt="Tailwind CSS" />
-  <img src="https://img.shields.io/badge/Status-Early%20Development-orange?style=for-the-badge" alt="Status" />
+  <img src="https://img.shields.io/badge/Lucide%20React-0.546.0-FF6B6B?style=for-the-badge" alt="Lucide React" />
+  <img src="https://img.shields.io/badge/Status-In%20Development-orange?style=for-the-badge" alt="Status" />
 </p>
 
-Modern frontend for CRM system built with Next.js 15, React 19, and TypeScript.
+Frontend for CRM system built with Next.js 15, React 19, and TypeScript.
 
-> **⚠️ Project Status**: Early development stage. UI components and features are being actively developed.
+> **⚠️ Project Status**: In active development. Features and API may change.
+
+---
 
 ## Tech Stack
 
-- **Next.js 15** - React framework with App Router
+- **Next.js 15** - App Router with Turbopack
 - **React 19** - Latest React with concurrent features
 - **TypeScript** - Type-safe development
 - **Tailwind CSS 4** - Utility-first styling
-- **Turbopack** - Fast build tool
+- **Lucide React** - Icon library
 
+---
 
+## Getting Started
 
-## Project Structure
+### Prerequisites
+- Node.js 18+
+- Backend API running on `http://localhost:5555`
 
+### Installation
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
 ```
-app/
-├── components/         # Reusable React components
-├── login/             # Authentication pages
-├── register/          # User registration
-├── globals.css        # Global styles and CSS variables
-└── layout.tsx         # Root layout component
+
+### Build for Production
+
+```bash
+npm run build
+npm start
 ```
 
-## API Integration
+---
 
-Connects to CRM Backend API:
-- `POST /api/user/login` - User authentication
-- `POST /api/user/register` - User registration
+## Features
 
-Backend runs on `http://localhost:5555`
-
-
-## License
-
-This project is licensed under the MIT License.
+- **Authentication** - User login/registration with JWT
+- **Dashboard** - Personalized user interface
+- **Activity Management** - Full CRUD operations
+- **Organization Integration** - Dynamic organization selection
+- **Theme Support** - Dark/light mode toggle
+- **Responsive Design** - Mobile-first approach
