@@ -210,7 +210,11 @@ export default function ProfilePage() {
             <div className="flex items-center">
               <button
                 onClick={() => router.back()}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mr-4"
+                className="p-2 rounded-lg transition-colors mr-4"
+                style={{ 
+                  background: 'var(--muted)',
+                  color: 'var(--foreground)'
+                }}
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
@@ -227,14 +231,18 @@ export default function ProfilePage() {
         <div className="px-4 py-6 sm:px-0">
         {/* Сообщения об ошибках и успехе */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <div className="text-red-800 dark:text-red-200">{error}</div>
+          <div className="mb-6 p-4 rounded-lg error-message">
+            <div>{error}</div>
           </div>
         )}
         
         {success && (
-          <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-            <div className="text-green-800 dark:text-green-200">{success}</div>
+          <div className="mb-6 p-4 rounded-lg" style={{
+            color: 'var(--success)',
+            background: 'rgba(16, 185, 129, 0.1)',
+            border: '1px solid rgba(16, 185, 129, 0.2)'
+          }}>
+            <div>{success}</div>
           </div>
         )}
 
@@ -242,7 +250,7 @@ export default function ProfilePage() {
           {/* Редактирование профиля */}
           <div className="card rounded-2xl p-6 fade-in">
             <div className="flex items-center gap-3 mb-6">
-              <User className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              <User className="w-6 h-6" style={{ color: 'var(--primary)' }} />
               <h2 className="text-xl font-semibold">Личная информация</h2>
             </div>
             
@@ -253,7 +261,7 @@ export default function ProfilePage() {
                   type="text"
                   value={profileData.firstName}
                   onChange={(e) => handleProfileChange('firstName', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="form-input"
                   placeholder="Введите имя"
                 />
               </div>
@@ -264,7 +272,7 @@ export default function ProfilePage() {
                   type="text"
                   value={profileData.lastName}
                   onChange={(e) => handleProfileChange('lastName', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="form-input"
                   placeholder="Введите фамилию"
                 />
               </div>
@@ -275,7 +283,7 @@ export default function ProfilePage() {
                   type="text"
                   value={profileData.middleName}
                   onChange={(e) => handleProfileChange('middleName', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="form-input"
                   placeholder="Введите отчество"
                 />
               </div>
@@ -286,7 +294,7 @@ export default function ProfilePage() {
                   type="text"
                   value={profileData.login}
                   onChange={(e) => handleProfileChange('login', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="form-input"
                   placeholder="Введите логин"
                 />
               </div>
@@ -294,7 +302,11 @@ export default function ProfilePage() {
               <button
                 onClick={handleProfileSave}
                 disabled={saving}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                className="form-button w-full flex items-center justify-center gap-2"
+                style={{
+                  background: 'var(--primary)',
+                  color: 'var(--primary-foreground)'
+                }}
               >
                 <Save className="w-4 h-4" />
                 {saving ? 'Сохранение...' : 'Сохранить изменения'}
@@ -305,7 +317,7 @@ export default function ProfilePage() {
           {/* Смена пароля */}
           <div className="card rounded-2xl p-6 fade-in">
             <div className="flex items-center gap-3 mb-6">
-              <Eye className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+              <Eye className="w-6 h-6" style={{ color: 'var(--secondary)' }} />
               <h2 className="text-xl font-semibold">Смена пароля</h2>
             </div>
             
@@ -317,13 +329,14 @@ export default function ProfilePage() {
                     type={showPasswords.current ? 'text' : 'password'}
                     value={passwordData.currentPassword}
                     onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
-                    className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="form-input pr-12"
                     placeholder="Введите текущий пароль"
                   />
                   <button
                     type="button"
                     onClick={() => togglePasswordVisibility('current')}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 transition-colors"
+                    style={{ color: 'var(--muted-foreground)' }}
                   >
                     {showPasswords.current ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -337,13 +350,14 @@ export default function ProfilePage() {
                     type={showPasswords.new ? 'text' : 'password'}
                     value={passwordData.newPassword}
                     onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
-                    className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="form-input pr-12"
                     placeholder="Введите новый пароль"
                   />
                   <button
                     type="button"
                     onClick={() => togglePasswordVisibility('new')}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 transition-colors"
+                    style={{ color: 'var(--muted-foreground)' }}
                   >
                     {showPasswords.new ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -357,13 +371,14 @@ export default function ProfilePage() {
                     type={showPasswords.confirm ? 'text' : 'password'}
                     value={passwordData.confirmPassword}
                     onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
-                    className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="form-input pr-12"
                     placeholder="Подтвердите новый пароль"
                   />
                   <button
                     type="button"
                     onClick={() => togglePasswordVisibility('confirm')}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 transition-colors"
+                    style={{ color: 'var(--muted-foreground)' }}
                   >
                     {showPasswords.confirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -373,7 +388,11 @@ export default function ProfilePage() {
               <button
                 onClick={handlePasswordSave}
                 disabled={saving || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
-                className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                className="form-button w-full flex items-center justify-center gap-2"
+                style={{
+                  background: 'var(--secondary)',
+                  color: 'var(--secondary-foreground)'
+                }}
               >
                 <Save className="w-4 h-4" />
                 {saving ? 'Сохранение...' : 'Изменить пароль'}
