@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import ThemeToggle from '../components/ThemeToggle';
-import { Calendar, Clock, Building2, FileText, ChevronDown, Plus, CalendarCheck, PlayCircle, XCircle, CheckCircle, Trash2, Edit } from 'lucide-react';
+import { Calendar, Clock, Building2, FileText, ChevronDown, Plus, CalendarCheck, PlayCircle, CheckCircle, Trash2, Edit } from 'lucide-react';
 
 interface Activity {
   activId: number;
@@ -157,14 +157,14 @@ export default function ActivitiesPage() {
           border: '1px solid rgba(34, 197, 94, 0.3)',
           icon: PlayCircle
         };
-      case 'отменен':
+      case 'сохранен':
         return {
-          background: 'rgba(239, 68, 68, 0.1)',
-          color: 'rgb(239, 68, 68)',
-          border: '1px solid rgba(239, 68, 68, 0.3)',
-          icon: XCircle
+          background: 'rgba(245, 158, 11, 0.1)',
+          color: 'rgb(245, 158, 11)',
+          border: '1px solid rgba(245, 158, 11, 0.3)',
+          icon: FileText
         };
-      case 'завершен':
+      case 'закрыт':
         return {
           background: 'rgba(107, 114, 128, 0.1)',
           color: 'rgb(107, 114, 128)',
