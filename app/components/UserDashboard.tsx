@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import ActivityChart from './ActivityChart';
 import StatsCard from './StatsCard';
 import { Activity, User, ChartData, DashboardStats } from './types';
+import { checkResponse } from '../utils/errorHandler';
 
 export default function UserDashboard() {
   const [, setUser] = useState<User | null>(null);
@@ -35,9 +36,7 @@ export default function UserDashboard() {
         },
       });
 
-      if (!response.ok) {
-        throw new Error('Ошибка при загрузке активностей');
-      }
+      await checkResponse(response, 'Ошибка при загрузке активностей');
 
       const data = await response.json();
       setActivities(data);

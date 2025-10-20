@@ -328,3 +328,9 @@ body {
     background-position: 100% 50%;
   }
 }
+
+/* Dropdown меню - максимальный z-index */
+.user-dropdown-menu {
+  z-index: 999999 !important;
+  position: absolute !important;
+}

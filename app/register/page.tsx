@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ThemeToggle from '../components/ThemeToggle';
+import { handleApiError } from '../utils/errorHandler';
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -35,8 +36,8 @@ export default function RegisterPage() {
         // После успешной регистрации перенаправляем на страницу входа
         router.push('/login');
       } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Ошибка регистрации');
+        const errorMessage = await handleApiError(response, 'Ошибка регистрации');
+        setError(errorMessage);
       }
     } catch {
       setError('Ошибка подключения к серверу');

@@ -48,7 +48,7 @@ export default function ActivityChart({ activityStats, dashboardStats }: Activit
               ></div>
               <span className="text-sm font-medium">{item.label}</span>
             </div>
-            <div className="text-sm font-semibold">{item.value} ({item.value / dashboardStats.totalActivities * 100}%)</div>
+            <div className="text-sm font-semibold">{item.value} ({(item.value / dashboardStats.totalActivities * 100).toFixed(2)}%)</div>
           </div>
         ))}
       </div>

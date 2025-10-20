@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ThemeToggle from '../components/ThemeToggle';
+import { handleApiError } from '../utils/errorHandler';
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -36,7 +37,8 @@ export default function LoginPage() {
         // Перенаправляем на главную страницу
         router.push('/');
       } else {
-        setError('Неверный логин или пароль');
+        const errorMessage = await handleApiError(response, 'Неверный логин или пароль');
+        setError(errorMessage);
       }
     } catch {
       setError('Ошибка подключения к серверу');

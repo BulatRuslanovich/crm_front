@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import ThemeToggle from '../components/ThemeToggle';
+import UserDropdown from '../components/UserDropdown';
 import { Calendar, Clock, Building2, FileText, ChevronDown, Plus, CalendarCheck, PlayCircle, CheckCircle, Trash2, Edit } from 'lucide-react';
+import { checkResponse } from '../utils/errorHandler';
 
 interface Activity {
   activId: number;
@@ -62,9 +64,7 @@ export default function ActivitiesPage() {
         },
       });
 
-      if (!response.ok) {
-        throw new Error('Ошибка при загрузке активностей');
-      }
+      await checkResponse(response, 'Ошибка при загрузке активностей');
 
       const data = await response.json();
       setActivities(data);
@@ -113,9 +113,7 @@ export default function ActivitiesPage() {
         },
       });
 
-      if (!response.ok) {
-        throw new Error('Ошибка при удалении активности');
-      }
+      await checkResponse(response, 'Ошибка при удалении активности');
 
       // Обновляем список активностей
       await fetchActivities(user.id);
@@ -275,17 +273,8 @@ export default function ActivitiesPage() {
                   >
                     На главную
                   </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover-lift"
-                    style={{ 
-                      background: 'var(--error)', 
-                      color: 'white',
-                      border: 'none'
-                    }}
-                  >
-                    Выйти
-                  </button>
+                
+                  <UserDropdown user={user} onLogout={handleLogout} />
                 </>
               ) : (
                 <Link

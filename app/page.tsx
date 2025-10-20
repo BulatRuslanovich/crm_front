@@ -4,11 +4,11 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import ThemeToggle from './components/ThemeToggle';
 import UserDashboard from './components/UserDashboard';
+import UserDropdown from './components/UserDropdown';
 import { ArrowRight, Sparkles, Pill, BarChart3, Activity, MapPin, Clock } from 'lucide-react';
 
 export default function Home() {
   const [user, setUser] = useState<{id: number, firstName: string, lastName: string, middleName: string, login: string} | null>(null);
-
   useEffect(() => {
     const userData = localStorage.getItem('user');
     if (userData) {
@@ -75,34 +75,7 @@ export default function Home() {
                     Мои активности
                   </Link>
                   
-                  {/* Информация о пользователе */}
-                  <div className="flex items-center gap-3 px-3 py-2 rounded-lg" style={{ background: 'var(--muted)' }}>
-                    <div className="w-8 h-8 rounded-full gradient-bg flex items-center justify-center">
-                      <span className="text-sm font-bold text-white">
-                        {user.firstName[0]}{user.lastName[0]}
-                      </span>
-                    </div>
-                    <div className="hidden sm:block">
-                      <div className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>
-                        {user.lastName} {user.firstName}
-                      </div>
-                      <div className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
-                        {user.login}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <button
-                    onClick={handleLogout}
-                    className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover-lift"
-                    style={{ 
-                      background: 'var(--error)', 
-                      color: 'white',
-                      border: 'none'
-                    }}
-                  >
-                    Выйти
-                  </button>
+                  <UserDropdown user={user} onLogout={handleLogout} />
                 </>
               ) : (
                 <>
@@ -134,7 +107,7 @@ export default function Home() {
         </div>
       </nav>
 
-      <main className="relative z-10">
+      <main className="relative z-0">
         {user ? (
           <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
             <div className="px-4 py-6 sm:px-0">
