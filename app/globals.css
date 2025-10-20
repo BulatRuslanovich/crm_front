@@ -186,3 +186,47 @@ body {
   z-index: 999999 !important;
   position: absolute !important;
 }
+
+.rbc-today {
+  background-color: var(--muted) !important;
+  color: var(--muted-foreground) !important;
+}
+
+.rbc-event-label {
+  display: none !important;
+}
+
+.rbc-off-range-bg {
+  background-color: var(--secondary-background) !important;
+}
+
+.rbc-time-content {
+  background-color: var(--secondary-background) !important;
+}
+
+/* Стили для скроллбара в области времени */
+.rbc-time-content::-webkit-scrollbar {
+  width: 8px !important;
+  height: 8px !important;
+}
+
+.rbc-time-content::-webkit-scrollbar-track {
+  background: var(--muted) !important;
+  border-radius: 4px !important;
+}
+
+.rbc-time-content::-webkit-scrollbar-thumb {
+  background: var(--primary) !important;
+  border-radius: 4px !important;
+}
+
+.rbc-time-content::-webkit-scrollbar-thumb:hover {
+  background: var(--primary) !important;
+  opacity: 0.8 !important;
+}
+
+/* Для Firefox */
+.rbc-time-content {
+  scrollbar-width: thin !important;
+  scrollbar-color: var(--primary) var(--muted) !important;
+}

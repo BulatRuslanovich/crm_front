@@ -191,6 +191,17 @@ export default function ActivitiesPage() {
               <div className="flex items-center space-x-4">
                 <ThemeToggle />
                 <Link
+                  href="/calendar"
+                  className="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover-lift flex items-center gap-2"
+                  style={{ 
+                    color: 'var(--foreground)',
+                    background: 'transparent'
+                  }}
+                >
+                  <Calendar size={16} />
+                  Календарь
+                </Link>
+                <Link
                   href="/"
                   className="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover-lift"
                   style={{ 
@@ -226,6 +237,17 @@ export default function ActivitiesPage() {
               </div>
               <div className="flex items-center space-x-4">
                 <ThemeToggle />
+                <Link
+                  href="/calendar"
+                  className="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover-lift flex items-center gap-2"
+                  style={{ 
+                    color: 'var(--foreground)',
+                    background: 'transparent'
+                  }}
+                >
+                  <Calendar size={16} />
+                  Календарь
+                </Link>
                 <Link
                   href="/"
                   className="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover-lift"
@@ -277,6 +299,18 @@ export default function ActivitiesPage() {
                   <UserDropdown user={user} onLogout={handleLogout} />
                 </>
               ) : (
+                <>
+                <Link
+                  href="/calendar"
+                  className="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover-lift flex items-center gap-2"
+                  style={{ 
+                    color: 'var(--foreground)',
+                    background: 'transparent'
+                  }}
+                >
+                  <Calendar size={16} />
+                  Календарь
+                </Link>
                 <Link
                   href="/"
                   className="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover-lift"
@@ -287,6 +321,7 @@ export default function ActivitiesPage() {
                 >
                   На главную
                 </Link>
+                </>
               )}
             </div>
           </div>

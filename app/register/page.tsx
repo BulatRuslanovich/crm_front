@@ -12,7 +12,8 @@ export default function RegisterPage() {
     lastName: '',
     middleName: '',
     login: '',
-    password: ''
+    password: '',
+    confirmPassword: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,6 +23,19 @@ export default function RegisterPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    // Валидация паролей
+    if (formData.password !== formData.confirmPassword) {
+      setError('Пароли не совпадают');
+      setLoading(false);
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Пароль должен содержать минимум 6 символов');
+      setLoading(false);
+      return;
+    }
 
     try {
       const response = await fetch('http://localhost:5555/api/user/register', {
@@ -150,6 +164,22 @@ export default function RegisterPage() {
                   onChange={handleChange}
                   className="form-input"
                   placeholder="Введите пароль"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
+                  Подтверждение пароля *
+                </label>
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  required
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  className="form-input"
+                  placeholder="Подтвердите пароль"
                 />
               </div>
             </div>

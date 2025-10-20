@@ -5,7 +5,7 @@ import Link from 'next/link';
 import ThemeToggle from './components/ThemeToggle';
 import UserDashboard from './components/UserDashboard';
 import UserDropdown from './components/UserDropdown';
-import { ArrowRight, Sparkles, Pill, BarChart3, Activity, MapPin, Clock } from 'lucide-react';
+import { ArrowRight, Sparkles, Pill, BarChart3, Activity, MapPin, Clock, Calendar } from 'lucide-react';
 
 export default function Home() {
   const [user, setUser] = useState<{id: number, firstName: string, lastName: string, middleName: string, login: string} | null>(null);
@@ -73,6 +73,18 @@ export default function Home() {
                   >
                     <Activity size={16} />
                     Мои активности
+                  </Link>
+                  
+                  <Link
+                    href="/calendar"
+                    className="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover-lift flex items-center gap-2"
+                    style={{ 
+                      color: 'var(--foreground)',
+                      background: 'transparent'
+                    }}
+                  >
+                    <Calendar size={16} />
+                    Календарь
                   </Link>
                   
                   <UserDropdown user={user} onLogout={handleLogout} />
