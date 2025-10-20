@@ -141,7 +141,7 @@ export default function Home() {
                       href="/register"
                       className="px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-200 hover-lift flex items-center gap-2 gradient-button glow-effect"
                       style={{ 
-                        color: 'white'
+                        color: 'var(--foreground)'
                       }}
                     >
                       Начать бесплатно
