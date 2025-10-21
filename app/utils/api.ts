@@ -56,18 +56,15 @@ class ApiClient {
   }
 
   async request(endpoint: string, options: ApiOptions = {}) {
-    const {
-      method = 'GET',
-      body,
-      headers = {},
-      requireAuth = true
-    } = options;
+    const { method = 'GET', body, headers = {}, requireAuth = true } = options;
 
-    const url = endpoint.startsWith('http') ? endpoint : `${this.baseUrl}${endpoint}`;
-    
+    const url = endpoint.startsWith('http')
+      ? endpoint
+      : `${this.baseUrl}${endpoint}`;
+
     const requestHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...headers
+      ...headers,
     };
 
     if (requireAuth) {
@@ -76,7 +73,7 @@ class ApiClient {
 
     const config: RequestInit = {
       method,
-      headers: requestHeaders
+      headers: requestHeaders,
     };
 
     if (body && method !== 'GET') {
@@ -88,18 +85,18 @@ class ApiClient {
 
       if (response.status === 401 && requireAuth && this.refreshTokenCallback) {
         const refreshed = await this.refreshTokenCallback();
-        
+
         if (refreshed) {
           const newHeaders = {
             ...requestHeaders,
-            ...this.getAuthHeaders()
+            ...this.getAuthHeaders(),
           };
-          
+
           const newConfig: RequestInit = {
             ...config,
-            headers: newHeaders
+            headers: newHeaders,
           };
-          
+
           response = await fetch(url, newConfig);
         } else {
           window.location.href = '/login';
@@ -109,16 +106,24 @@ class ApiClient {
 
       if (!response.ok) {
         const errorText = await response.text();
-        
+
         // Пытаемся парсить JSON ошибку
         let errorMessage = errorText || response.statusText;
         let parsedError: unknown = null;
-        
+
         try {
           parsedError = JSON.parse(errorText);
-          if (parsedError && typeof parsedError === 'object' && 'message' in parsedError) {
+          if (
+            parsedError &&
+            typeof parsedError === 'object' &&
+            'message' in parsedError
+          ) {
             errorMessage = (parsedError as { message: string }).message;
-          } else if (parsedError && typeof parsedError === 'object' && 'error' in parsedError) {
+          } else if (
+            parsedError &&
+            typeof parsedError === 'object' &&
+            'error' in parsedError
+          ) {
             errorMessage = (parsedError as { error: string }).error;
           }
         } catch {
@@ -132,15 +137,35 @@ class ApiClient {
           case 401:
             throw new AuthenticationError(errorMessage);
           case 403:
-            throw new ApiError(errorMessage, response.status, 'Forbidden', errorText);
+            throw new ApiError(
+              errorMessage,
+              response.status,
+              'Forbidden',
+              errorText
+            );
           case 404:
-            throw new ApiError(errorMessage, response.status, 'Not Found', errorText);
+            throw new ApiError(
+              errorMessage,
+              response.status,
+              'Not Found',
+              errorText
+            );
           case 422:
             throw new ValidationError(errorMessage, response.status, errorText);
           case 500:
-            throw new ApiError('Внутренняя ошибка сервера', response.status, 'Internal Server Error', errorText);
+            throw new ApiError(
+              'Внутренняя ошибка сервера',
+              response.status,
+              'Internal Server Error',
+              errorText
+            );
           default:
-            throw new ApiError(errorMessage, response.status, response.statusText, errorText);
+            throw new ApiError(
+              errorMessage,
+              response.status,
+              response.statusText,
+              errorText
+            );
         }
       }
 
@@ -148,14 +173,16 @@ class ApiClient {
     } catch (error) {
       // Обработка сетевых ошибок
       if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new NetworkError('Ошибка сети. Проверьте подключение к интернету.');
+        throw new NetworkError(
+          'Ошибка сети. Проверьте подключение к интернету.'
+        );
       }
-      
+
       // Если это уже наша ошибка, просто пробрасываем её
       if (error instanceof ApiError || error instanceof NetworkError) {
         throw error;
       }
-      
+
       // Для остальных ошибок создаем общую ошибку API
       throw new ApiError(
         error instanceof Error ? error.message : 'Неизвестная ошибка',
@@ -170,11 +197,19 @@ class ApiClient {
     return this.request(endpoint, { ...options, method: 'GET' });
   }
 
-  post(endpoint: string, body?: unknown, options?: Omit<ApiOptions, 'method' | 'body'>) {
+  post(
+    endpoint: string,
+    body?: unknown,
+    options?: Omit<ApiOptions, 'method' | 'body'>
+  ) {
     return this.request(endpoint, { ...options, method: 'POST', body });
   }
 
-  put(endpoint: string, body?: unknown, options?: Omit<ApiOptions, 'method' | 'body'>) {
+  put(
+    endpoint: string,
+    body?: unknown,
+    options?: Omit<ApiOptions, 'method' | 'body'>
+  ) {
     return this.request(endpoint, { ...options, method: 'PUT', body });
   }
 
@@ -186,7 +221,10 @@ class ApiClient {
 // Создаем экземпляр API клиента
 let apiClient: ApiClient | null = null;
 
-export function initApi(baseUrl: string, getAuthHeaders: () => Record<string, string>) {
+export function initApi(
+  baseUrl: string,
+  getAuthHeaders: () => Record<string, string>
+) {
   apiClient = new ApiClient(baseUrl, getAuthHeaders);
 }
 
@@ -203,7 +241,11 @@ export function api() {
   return apiClient;
 }
 
-export async function fetchApi(endpoint: string, method: 'GET' | 'POST' | 'PUT' | 'DELETE', body?: unknown) {
+export async function fetchApi(
+  endpoint: string,
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+  body?: unknown
+) {
   return api().request(endpoint, { method, body });
 }
 
@@ -211,7 +253,11 @@ export async function getApi(endpoint: string) {
   return api().get(endpoint);
 }
 
-export async function postApi(endpoint: string, body?: unknown, requireAuth: boolean = true) {
+export async function postApi(
+  endpoint: string,
+  body?: unknown,
+  requireAuth: boolean = true
+) {
   return api().post(endpoint, body, { requireAuth });
 }
 

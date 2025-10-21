@@ -37,11 +37,13 @@ export default function UserDashboard() {
       statusCounts[status] = (statusCounts[status] || 0) + 1;
 
       const visitDate = new Date(activity.visitDate);
-      if (visitDate.getMonth() === currentMonth && visitDate.getFullYear() === currentYear) {
+      if (
+        visitDate.getMonth() === currentMonth &&
+        visitDate.getFullYear() === currentYear
+      ) {
         visitsThisMonth++;
       }
 
-  
       const duration = calculateDuration(activity.startTime, activity.endTime);
       totalDuration += duration;
 
@@ -57,9 +59,15 @@ export default function UserDashboard() {
     setDashboardStats({
       totalActivities: activities.length,
       completedActivities,
-      avgVisitFrequency: completedActivities > 0 ? completedActivities / uniqueOrganizations.size : 0,
+      avgVisitFrequency:
+        completedActivities > 0
+          ? completedActivities / uniqueOrganizations.size
+          : 0,
       visitsThisMonth,
-      avgVisitDuration: activities.length > 0 ? Math.round(totalDuration / activities.length) : 0
+      avgVisitDuration:
+        activities.length > 0
+          ? Math.round(totalDuration / activities.length)
+          : 0,
     });
   }, []);
 
@@ -87,33 +95,42 @@ export default function UserDashboard() {
   const calculateDuration = (startTime: string, endTime: string): number => {
     const [startHour, startMin] = startTime.split(':').map(Number);
     const [endHour, endMin] = endTime.split(':').map(Number);
-    return (endHour * 60 + endMin) - (startHour * 60 + startMin);
+    return endHour * 60 + endMin - (startHour * 60 + startMin);
   };
 
-  const createChartData = (statusCounts: Record<string, number>, total: number): ChartData[] => {
+  const createChartData = (
+    statusCounts: Record<string, number>,
+    total: number
+  ): ChartData[] => {
     const colors: Record<string, string> = {
-      'запланирован': '#3b82f6',
-      'открыт': '#10b981',
-      'сохранен': '#f59e0b',
-      'закрыт': '#6b7280'
+      запланирован: '#3b82f6',
+      открыт: '#10b981',
+      сохранен: '#f59e0b',
+      закрыт: '#6b7280',
     };
 
     return Object.entries(statusCounts).map(([status, count]) => ({
       label: status.charAt(0).toUpperCase() + status.slice(1),
       value: count,
       color: colors[status] || '#9ca3af',
-      percentage: Math.round((count / total) * 1000) / 10
+      percentage: Math.round((count / total) * 1000) / 10,
     }));
   };
 
   return (
-    <LoadingWrapper loading={loading} loadingText="Загрузка данных дашборда...">
+    <LoadingWrapper loading={loading} loadingText='Загрузка данных дашборда...'>
       {error ? (
-        <ErrorMessage message={error} className="card rounded-2xl p-8 text-center" />
+        <ErrorMessage
+          message={error}
+          className='card rounded-2xl p-8 text-center'
+        />
       ) : (
-        <div className="space-y-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <ActivityChart activityStats={activityStats} dashboardStats={dashboardStats} />
+        <div className='space-y-8'>
+          <div className='grid grid-cols-1 lg:grid-cols-2 gap-8'>
+            <ActivityChart
+              activityStats={activityStats}
+              dashboardStats={dashboardStats}
+            />
             <StatsCard stats={dashboardStats} />
           </div>
         </div>

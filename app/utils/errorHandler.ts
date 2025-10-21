@@ -1,20 +1,25 @@
 'use client';
 
-import { ApiError, ValidationError, AuthenticationError, NetworkError } from './api';
+import {
+  ApiError,
+  ValidationError,
+  AuthenticationError,
+  NetworkError,
+} from './api';
 
 export function handleApiError(error: unknown): string {
   if (error instanceof ValidationError) {
     return error.message;
   }
-  
+
   if (error instanceof AuthenticationError) {
     return 'Ошибка авторизации';
   }
-  
+
   if (error instanceof NetworkError) {
     return error.message;
   }
-  
+
   if (error instanceof ApiError) {
     switch (error.status) {
       case 400:
@@ -31,12 +36,12 @@ export function handleApiError(error: unknown): string {
         return error.message || 'Произошла ошибка при выполнении запроса';
     }
   }
-  
+
   // Для обычных Error
   if (error instanceof Error) {
     return error.message;
   }
-  
+
   // Для неизвестных ошибок
   return 'Произошла неизвестная ошибка';
 }
@@ -45,13 +50,13 @@ export function logApiError(error: unknown, context?: string) {
   if (process.env.NODE_ENV === 'development') {
     console.group(`🚨 API Error${context ? ` in ${context}` : ''}`);
     console.error('Error:', error);
-    
+
     if (error instanceof ApiError) {
       console.error('Status:', error.status);
       console.error('Status Text:', error.statusText);
       console.error('Response:', error.response);
     }
-    
+
     console.groupEnd();
   }
 }
@@ -61,6 +66,6 @@ export function useErrorHandler() {
     logApiError(error, context);
     return handleApiError(error);
   };
-  
+
   return { handleError };
 }

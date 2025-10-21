@@ -10,15 +10,17 @@ interface LoadingWrapperProps {
   className?: string;
 }
 
-export function LoadingWrapper({ 
-  loading, 
-  children, 
-  loadingText = 'Загрузка...', 
-  className = '' 
+export function LoadingWrapper({
+  loading,
+  children,
+  loadingText = 'Загрузка...',
+  className = '',
 }: LoadingWrapperProps) {
   if (loading) {
     return (
-      <div className={`flex items-center justify-center min-h-[200px] ${className}`}>
+      <div
+        className={`flex items-center justify-center min-h-[200px] ${className}`}
+      >
         <LoadingSpinner text={loadingText} />
       </div>
     );

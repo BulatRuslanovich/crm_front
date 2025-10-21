@@ -1,6 +1,13 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+  useCallback,
+} from 'react';
 import { initApi, postApi, setRefreshTokenCallback } from '../utils/api';
 import { User } from '../types/common';
 import { decodeJWT } from '../utils/tokenUtils';
@@ -32,11 +39,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const accessToken = localStorage.getItem('token');
     const refreshToken = localStorage.getItem('refreshToken');
     const userData = localStorage.getItem('user');
-    
+
     if (accessToken && refreshToken) {
       setTokensState({ accessToken, refreshToken });
     }
-    
+
     if (userData) {
       try {
         setUserState(JSON.parse(userData));
@@ -49,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const setTokens = useCallback((newTokens: AuthTokens | null) => {
     setTokensState(newTokens);
-    
+
     if (newTokens) {
       localStorage.setItem('token', newTokens.accessToken);
       localStorage.setItem('refreshToken', newTokens.refreshToken);
@@ -61,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const setUser = useCallback((newUser: User | null) => {
     setUserState(newUser);
-    
+
     if (newUser) {
       localStorage.setItem('user', JSON.stringify(newUser));
     } else {
@@ -72,7 +79,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     try {
       if (tokens?.refreshToken) {
-        await postApi('/user/logout', { refreshToken: tokens.refreshToken }, false);
+        await postApi(
+          '/user/logout',
+          { refreshToken: tokens.refreshToken },
+          false
+        );
       }
     } catch (error) {
       console.error('Error during logout:', error);
@@ -88,12 +99,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     setIsRefreshing(true);
-    
+
     try {
-      const data = await postApi('/user/refresh', { refreshToken: tokens.refreshToken }, false);
+      const data = await postApi(
+        '/user/refresh',
+        { refreshToken: tokens.refreshToken },
+        false
+      );
       setTokens({
         accessToken: data.accessToken,
-        refreshToken: data.refreshToken
+        refreshToken: data.refreshToken,
       });
       return true;
     } catch (error) {
@@ -111,9 +126,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const token = tokens?.accessToken || localStorage.getItem('token');
       return token ? { Authorization: `Bearer ${token}` } : {};
     };
-    
+
     initApi('http://localhost:5555/api', getAuthHeaders);
-    
+
     // Устанавливаем callback для обновления токенов
     setRefreshTokenCallback(refreshAccessToken);
   }, [tokens?.accessToken, refreshAccessToken]);
@@ -127,8 +142,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (tokenInfo) {
         const now = Math.floor(Date.now() / 1000);
         const fiveMinutes = 5 * 60;
-        
-        if ((tokenInfo.exp - now) < fiveMinutes) {
+
+        if (tokenInfo.exp - now < fiveMinutes) {
           refreshAccessToken();
         }
       }
@@ -136,23 +151,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Проверяем каждые 2 минуты
     const interval = setInterval(checkTokenExpiration, 2 * 60 * 1000);
-    
+
     return () => clearInterval(interval);
   }, [tokens?.accessToken, refreshAccessToken]);
 
-  const isAuthenticated = !!(tokens?.accessToken);
+  const isAuthenticated = !!tokens?.accessToken;
 
   return (
-    <AuthContext.Provider value={{ 
-      tokens, 
-      user, 
-      setTokens, 
-      setUser, 
-      refreshAccessToken, 
-      logout, 
-      isRefreshing, 
-      isAuthenticated 
-    }}>
+    <AuthContext.Provider
+      value={{
+        tokens,
+        user,
+        setTokens,
+        setUser,
+        refreshAccessToken,
+        logout,
+        isRefreshing,
+        isAuthenticated,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -168,7 +185,7 @@ export function useAuth() {
 
 export function useRequireAuth() {
   const { isAuthenticated, isRefreshing, tokens } = useAuth();
-  
+
   useEffect(() => {
     // Не перенаправляем, если идет процесс обновления токенов или если токены еще загружаются
     if (!isRefreshing && !isAuthenticated && tokens === null) {
@@ -176,10 +193,10 @@ export function useRequireAuth() {
       const timer = setTimeout(() => {
         window.location.href = '/login';
       }, 100);
-      
+
       return () => clearTimeout(timer);
     }
   }, [isAuthenticated, isRefreshing, tokens]);
-  
+
   return { isAuthenticated, isRefreshing };
 }

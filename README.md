@@ -30,6 +30,7 @@ Frontend for CRM system built with Next.js 15, React 19, and TypeScript.
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js 18+
 - Backend API running on `http://localhost:5555`
 

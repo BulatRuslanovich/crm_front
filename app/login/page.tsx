@@ -15,22 +15,26 @@ export default function LoginPage() {
   const router = useRouter();
   const { setTokens, setUser } = useAuth();
   const [apiError, setApiError] = useState<string | null>(null);
-  
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginForm>({
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginForm>({
     defaultValues: {
       login: '',
-      password: ''
-    }
+      password: '',
+    },
   });
 
   const onSubmit = async (data: LoginForm) => {
     setApiError(null);
-    
+
     try {
       const result = await postApi('/user/login', data, false);
       setTokens({
         accessToken: result.accessToken,
-        refreshToken: result.refreshToken
+        refreshToken: result.refreshToken,
       });
       setUser(result.user);
       router.push('/');
@@ -42,43 +46,47 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--background)' }}>
-      <div className="max-w-md w-full space-y-8 p-8">
+    <div
+      className='min-h-screen flex items-center justify-center'
+      style={{ background: 'var(--background)' }}
+    >
+      <div className='max-w-md w-full space-y-8 p-8'>
         {/* Переключатель тем */}
-        <div className="flex justify-end">
+        <div className='flex justify-end'>
           <ThemeToggle />
         </div>
-        
-        <div className="card rounded-xl p-8 fade-in">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold gradient-text">
-              Вход в систему
-            </h2>
-            <p className="mt-2 text-sm" style={{ color: 'var(--muted-foreground)' }}>
+
+        <div className='card rounded-xl p-8 fade-in'>
+          <div className='text-center mb-8'>
+            <h2 className='text-3xl font-bold gradient-text'>Вход в систему</h2>
+            <p
+              className='mt-2 text-sm'
+              style={{ color: 'var(--muted-foreground)' }}
+            >
               Войдите в свой аккаунт для доступа к системе
             </p>
           </div>
-          
-          <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
-            <div className="space-y-4">
+
+          <form className='space-y-6' onSubmit={handleSubmit(onSubmit)}>
+            <div className='space-y-4'>
               <SimpleInput
-                {...register('login', { 
+                {...register('login', {
                   required: 'Логин обязателен',
-                  minLength: { value: 3, message: 'Минимум 3 символа' }
+                  minLength: { value: 3, message: 'Минимум 3 символа' },
                 })}
-                label="Логин"
-                placeholder="Введите логин"
+                label='Логин'
+                placeholder='Введите логин'
                 error={errors.login?.message}
                 required
               />
               <SimpleInput
-                {...register('password', { 
+                {...register('password', {
                   required: 'Пароль обязателен',
-                  minLength: { value: 4, message: 'Минимум 4 символа' }
+                  minLength: { value: 4, message: 'Минимум 4 символа' },
                 })}
-                type="password"
-                label="Пароль"
-                placeholder="Введите пароль"
+                type='password'
+                label='Пароль'
+                placeholder='Введите пароль'
                 error={errors.password?.message}
                 required
               />
@@ -87,17 +95,17 @@ export default function LoginPage() {
             <ErrorMessage message={apiError || ''} />
 
             <FormButton
-              type="submit"
+              type='submit'
               loading={isSubmitting}
-              loadingText="Вход..."
+              loadingText='Вход...'
             >
               Войти
             </FormButton>
 
-            <div className="text-center">
-              <Link 
-                href="/register" 
-                className="text-sm font-medium transition-colors duration-200 hover:underline"
+            <div className='text-center'>
+              <Link
+                href='/register'
+                className='text-sm font-medium transition-colors duration-200 hover:underline'
                 style={{ color: 'var(--primary)' }}
               >
                 Нет аккаунта? Зарегистрироваться

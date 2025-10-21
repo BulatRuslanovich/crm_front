@@ -12,8 +12,8 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   if (isRefreshing) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg" style={{ color: 'var(--muted-foreground)' }}>
+      <div className='min-h-screen flex items-center justify-center'>
+        <div className='text-lg' style={{ color: 'var(--muted-foreground)' }}>
           Проверка аутентификации...
         </div>
       </div>

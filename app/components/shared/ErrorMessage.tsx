@@ -8,9 +8,5 @@ interface ErrorMessageProps {
 export function ErrorMessage({ message, className = '' }: ErrorMessageProps) {
   if (!message) return null;
 
-  return (
-    <div className={`error-message ${className}`}>
-      {message}
-    </div>
-  );
+  return <div className={`error-message ${className}`}>{message}</div>;
 }

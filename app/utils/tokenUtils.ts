@@ -9,7 +9,7 @@ export function decodeJWT(token: string): TokenInfo | null {
     if (parts.length !== 3) {
       return null;
     }
-    
+
     const payload = parts[1];
     const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
     return JSON.parse(decoded);

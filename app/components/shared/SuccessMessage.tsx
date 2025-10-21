@@ -5,12 +5,11 @@ interface SuccessMessageProps {
   className?: string;
 }
 
-export function SuccessMessage({ message, className = '' }: SuccessMessageProps) {
+export function SuccessMessage({
+  message,
+  className = '',
+}: SuccessMessageProps) {
   if (!message) return null;
 
-  return (
-    <div className={`success-message ${className}`}>
-      {message}
-    </div>
-  );
+  return <div className={`success-message ${className}`}>{message}</div>;
 }
