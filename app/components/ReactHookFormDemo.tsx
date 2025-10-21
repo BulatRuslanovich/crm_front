@@ -15,8 +15,8 @@ export function ReactHookFormDemo() {
     },
   });
 
-  const onSubmit = async (data: { email: string; password: string }) => {
-    console.log('Form data:', data);
+  const onSubmit = async (_data: { email: string; password: string }) => {
+    // Form data submitted
     // Здесь можно добавить логику отправки
   };
 

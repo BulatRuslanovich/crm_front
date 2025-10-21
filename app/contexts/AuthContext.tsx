@@ -47,8 +47,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (userData) {
       try {
         setUserState(JSON.parse(userData));
-      } catch (error) {
-        console.error('Error parsing user data:', error);
+      } catch {
+        // Error parsing user data - clear invalid data
         localStorage.removeItem('user');
       }
     }
@@ -85,8 +85,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           false
         );
       }
-    } catch (error) {
-      console.error('Error during logout:', error);
+    } catch {
+      // Error during logout - continue with cleanup
     } finally {
       setTokens(null);
       setUser(null);
@@ -111,8 +111,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         refreshToken: data.refreshToken,
       });
       return true;
-    } catch (error) {
-      console.error('Error refreshing token:', error);
+    } catch {
+      // Error refreshing token - logout user
       await logout();
       return false;
     } finally {

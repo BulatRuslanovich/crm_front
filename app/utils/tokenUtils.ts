@@ -13,8 +13,8 @@ export function decodeJWT(token: string): TokenInfo | null {
     const payload = parts[1];
     const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
     return JSON.parse(decoded);
-  } catch (error) {
-    console.error('Error decoding JWT:', error);
+  } catch {
+    // Error decoding JWT - return null
     return null;
   }
 }

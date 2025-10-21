@@ -48,15 +48,21 @@ export function handleApiError(error: unknown): string {
 
 export function logApiError(error: unknown, context?: string) {
   if (process.env.NODE_ENV === 'development') {
+    // eslint-disable-next-line no-console
     console.group(`🚨 API Error${context ? ` in ${context}` : ''}`);
+    // eslint-disable-next-line no-console
     console.error('Error:', error);
 
     if (error instanceof ApiError) {
+      // eslint-disable-next-line no-console
       console.error('Status:', error.status);
+      // eslint-disable-next-line no-console
       console.error('Status Text:', error.statusText);
+      // eslint-disable-next-line no-console
       console.error('Response:', error.response);
     }
 
+    // eslint-disable-next-line no-console
     console.groupEnd();
   }
 }

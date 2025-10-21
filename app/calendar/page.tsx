@@ -119,7 +119,7 @@ export default function CalendarPage() {
       });
 
       setVisits(visitsData);
-    } catch (error) {
+    } catch {
       // Error fetching visits - handled by error boundary
     } finally {
       setLoading(false);
@@ -161,15 +161,12 @@ export default function CalendarPage() {
     setView(newView);
   };
 
-  const onSelectEvent = (event: Visit) => {
-    const startTime = moment(event.start).format('HH:mm');
-    const endTime = moment(event.end).format('HH:mm');
-    const date = moment(event.start).format('DD.MM.YYYY');
+  // const onSelectEvent = (event: Visit) => {
+  //   const startTime = moment(event.start).format('HH:mm');
+  //   const endTime = moment(event.end).format('HH:mm');
+  //   const date = moment(event.start).format('DD.MM.YYYY');
 
-    alert(
-      `Визит: ${event.title}\nОрганизация: ${event.clientName}\nДата: ${date}\nВремя: ${startTime} - ${endTime}\nСтатус: ${event.status}${event.description ? `\nОписание: ${event.description}` : ''}`
-    );
-  };
+  // };
 
   if (loading) {
     return (
@@ -342,7 +339,7 @@ export default function CalendarPage() {
                   date={date}
                   onNavigate={onNavigate}
                   onView={onView}
-                  onSelectEvent={onSelectEvent}
+                  // onSelectEvent={onSelectEvent}
                   eventPropGetter={eventStyleGetter}
                   toolbar={false}
                   step={15}
