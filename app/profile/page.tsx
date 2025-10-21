@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { User, Eye, EyeOff, Save, ArrowLeft } from 'lucide-react';
 import ThemeToggle from '../components/ThemeToggle';
-import { checkResponse } from '../utils/errorHandler';
-import { useAuth, useAuthenticatedFetch } from '../contexts/AuthContext';
+import { FormField, FormButton, ErrorMessage, SuccessMessage } from '../components/shared';
+import { useAuth } from '../contexts/AuthContext';
 import ProtectedRoute from '../components/ProtectedRoute';
+import { putApi } from '../utils/api';
 
 interface UserProfile {
   firstName: string;
@@ -25,7 +26,6 @@ interface PasswordChange {
 export default function ProfilePage() {
   const router = useRouter();
   const { user: authUser, setUser: setAuthUser } = useAuth();
-  const authenticatedFetch = useAuthenticatedFetch();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -94,22 +94,14 @@ export default function ProfilePage() {
     setSuccess(null);
 
     try {
-      const response = await authenticatedFetch(`http://localhost:5555/api/user/${user.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          firstName: profileData.firstName,
-          lastName: profileData.lastName,
-          middleName: profileData.middleName,
-          login: profileData.login
-        }),
+      await putApi(`/user/${user.id}`, {
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        middleName: profileData.middleName,
+        login: profileData.login
       });
 
-      await checkResponse(response, 'Ошибка при обновлении профиля');
-
-      // Обновляем данные в контексте
+    
       const updatedUser = { ...user, ...profileData };
       setAuthUser(updatedUser);
       setSuccess('Профиль успешно обновлен!');
@@ -149,19 +141,10 @@ export default function ProfilePage() {
     setSuccess(null);
 
     try {
-      // Используем существующий эндпоинт для обновления пароля
-      const response = await authenticatedFetch(`http://localhost:5555/api/user/${user.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          currentPassword: passwordData.currentPassword,
-          password: passwordData.newPassword
-        }),
+      await putApi(`/user/${user.id}`, {
+        currentPassword: passwordData.currentPassword,
+        password: passwordData.newPassword
       });
-
-      await checkResponse(response, 'Ошибка при смене пароля');
 
       setSuccess('Пароль успешно изменен!');
       setPasswordData({
@@ -220,21 +203,8 @@ export default function ProfilePage() {
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
         {/* Сообщения об ошибках и успехе */}
-        {error && (
-          <div className="mb-6 p-4 rounded-lg error-message">
-            <div>{error}</div>
-          </div>
-        )}
-        
-        {success && (
-          <div className="mb-6 p-4 rounded-lg" style={{
-            color: 'var(--success)',
-            background: 'rgba(16, 185, 129, 0.1)',
-            border: '1px solid rgba(16, 185, 129, 0.2)'
-          }}>
-            <div>{success}</div>
-          </div>
-        )}
+        <ErrorMessage message={error || ''} />
+        <SuccessMessage message={success || ''} />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Редактирование профиля */}
@@ -245,62 +215,51 @@ export default function ProfilePage() {
             </div>
             
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Имя</label>
-                <input
-                  type="text"
-                  value={profileData.firstName}
-                  onChange={(e) => handleProfileChange('firstName', e.target.value)}
-                  className="form-input"
-                  placeholder="Введите имя"
-                />
-              </div>
+              <FormField
+                name="firstName"
+                type="text"
+                label="Имя"
+                value={profileData.firstName}
+                onChange={(e) => handleProfileChange('firstName', e.target.value)}
+                placeholder="Введите имя"
+              />
               
-              <div>
-                <label className="block text-sm font-medium mb-2">Фамилия</label>
-                <input
-                  type="text"
-                  value={profileData.lastName}
-                  onChange={(e) => handleProfileChange('lastName', e.target.value)}
-                  className="form-input"
-                  placeholder="Введите фамилию"
-                />
-              </div>
+              <FormField
+                name="lastName"
+                type="text"
+                label="Фамилия"
+                value={profileData.lastName}
+                onChange={(e) => handleProfileChange('lastName', e.target.value)}
+                placeholder="Введите фамилию"
+              />
               
-              <div>
-                <label className="block text-sm font-medium mb-2">Отчество</label>
-                <input
-                  type="text"
-                  value={profileData.middleName}
-                  onChange={(e) => handleProfileChange('middleName', e.target.value)}
-                  className="form-input"
-                  placeholder="Введите отчество"
-                />
-              </div>
+              <FormField
+                name="middleName"
+                type="text"
+                label="Отчество"
+                value={profileData.middleName}
+                onChange={(e) => handleProfileChange('middleName', e.target.value)}
+                placeholder="Введите отчество"
+              />
               
-              <div>
-                <label className="block text-sm font-medium mb-2">Логин</label>
-                <input
-                  type="text"
-                  value={profileData.login}
-                  onChange={(e) => handleProfileChange('login', e.target.value)}
-                  className="form-input"
-                  placeholder="Введите логин"
-                />
-              </div>
+              <FormField
+                name="login"
+                type="text"
+                label="Логин"
+                value={profileData.login}
+                onChange={(e) => handleProfileChange('login', e.target.value)}
+                placeholder="Введите логин"
+              />
               
-              <button
+              <FormButton
                 onClick={handleProfileSave}
-                disabled={saving}
-                className="form-button w-full flex items-center justify-center gap-2"
-                style={{
-                  background: 'var(--primary)',
-                  color: 'var(--primary-foreground)'
-                }}
+                loading={saving}
+                loadingText="Сохранение..."
+                className="w-full"
               >
                 <Save className="w-4 h-4" />
-                {saving ? 'Сохранение...' : 'Сохранить изменения'}
-              </button>
+                Сохранить изменения
+              </FormButton>
             </div>
           </div>
 
@@ -375,18 +334,17 @@ export default function ProfilePage() {
                 </div>
               </div>
               
-              <button
+              <FormButton
                 onClick={handlePasswordSave}
-                disabled={saving || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
-                className="form-button w-full flex items-center justify-center gap-2"
-                style={{
-                  background: 'var(--secondary)',
-                  color: 'var(--secondary-foreground)'
-                }}
+                loading={saving}
+                loadingText="Сохранение..."
+                disabled={!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword}
+                variant="secondary"
+                className="w-full"
               >
                 <Save className="w-4 h-4" />
-                {saving ? 'Сохранение...' : 'Изменить пароль'}
-              </button>
+                Изменить пароль
+              </FormButton>
             </div>
           </div>
         </div>

@@ -1,18 +1,12 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import { initApi, postApi } from '../utils/api';
+import { User } from '../types/common';
 
 interface AuthTokens {
   accessToken: string;
   refreshToken: string;
-}
-
-interface User {
-  id: number;
-  firstName: string;
-  lastName: string;
-  middleName: string;
-  login: string;
 }
 
 interface AuthContextType {
@@ -33,7 +27,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUserState] = useState<User | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Загружаем токены и пользователя из localStorage при инициализации
   useEffect(() => {
     const accessToken = localStorage.getItem('token');
     const refreshToken = localStorage.getItem('refreshToken');
@@ -65,6 +58,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  useEffect(() => {
+    const getAuthHeaders = (): Record<string, string> => {
+      const token = localStorage.getItem('token');
+      return token ? { Authorization: `Bearer ${token}` } : {};
+    };
+    
+    initApi('http://localhost:5555/api', getAuthHeaders);
+  }, []);
+
   const setUser = useCallback((newUser: User | null) => {
     setUserState(newUser);
     
@@ -78,15 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     try {
       if (tokens?.refreshToken) {
-        await fetch('http://localhost:5555/api/user/logout', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            refreshToken: tokens.refreshToken
-          }),
-        });
+        await postApi('/user/logout', { refreshToken: tokens.refreshToken }, false);
       }
     } catch (error) {
       console.error('Error during logout:', error);
@@ -104,28 +98,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsRefreshing(true);
     
     try {
-      const response = await fetch('http://localhost:5555/api/user/refresh', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          refreshToken: tokens.refreshToken
-        }),
+      const data = await postApi('/user/refresh', { refreshToken: tokens.refreshToken }, false);
+      setTokens({
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        setTokens({
-          accessToken: data.accessToken,
-          refreshToken: data.refreshToken
-        });
-        return true;
-      } else {
-        // Refresh token недействителен, очищаем все токены
-        await logout();
-        return false;
-      }
+      return true;
     } catch (error) {
       console.error('Error refreshing token:', error);
       await logout();
@@ -161,7 +139,6 @@ export function useAuth() {
   return context;
 }
 
-// Хук для автоматического обновления токенов при запросах
 export function useAuthenticatedFetch() {
   const { tokens, refreshAccessToken, logout } = useAuth();
 
@@ -170,7 +147,6 @@ export function useAuthenticatedFetch() {
       throw new Error('No access token available');
     }
 
-    // Добавляем токен к запросу
     const headers = {
       ...options.headers,
       'Authorization': `Bearer ${tokens.accessToken}`,
@@ -181,15 +157,12 @@ export function useAuthenticatedFetch() {
       headers,
     });
 
-    // Если токен истек (401), пытаемся обновить его
     if (response.status === 401) {
       const refreshed = await refreshAccessToken();
       
       if (refreshed) {
-        // Получаем обновленные токены из localStorage
         const newAccessToken = localStorage.getItem('token');
         if (newAccessToken) {
-          // Повторяем запрос с новым токеном
           const newHeaders = {
             ...options.headers,
             'Authorization': `Bearer ${newAccessToken}`,
@@ -205,7 +178,6 @@ export function useAuthenticatedFetch() {
           throw new Error('Authentication failed');
         }
       } else {
-        // Не удалось обновить токен, перенаправляем на логин
         window.location.href = '/login';
         throw new Error('Authentication failed');
       }

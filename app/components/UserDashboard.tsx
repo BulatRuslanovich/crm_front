@@ -3,12 +3,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import ActivityChart from './ActivityChart';
 import StatsCard from './StatsCard';
-import { Activity, User, ChartData, DashboardStats } from './types';
-import { checkResponse } from '../utils/errorHandler';
+import { ChartData, DashboardStats } from './types';
+import { getApi } from '../utils/api';
+import { LoadingWrapper } from './shared/LoadingWrapper';
+import { ErrorMessage } from './shared/ErrorMessage';
+import { useAuth } from '../contexts/AuthContext';
+import { HumActivity } from '../types/common';
 
 export default function UserDashboard() {
-  const [, setUser] = useState<User | null>(null);
-  const [, setActivities] = useState<Activity[]>([]);
+  const { user } = useAuth();
   const [activityStats, setActivityStats] = useState<ChartData[]>([]);
   const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
     totalActivities: 0,
@@ -20,49 +23,8 @@ export default function UserDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchActivities = useCallback(async (userId: number) => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('Токен не найден');
-        setLoading(false);
-        return;
-      }
-
-      const response = await fetch(`http://localhost:5555/api/user/${userId}/activ`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      await checkResponse(response, 'Ошибка при загрузке активностей');
-
-      const data = await response.json();
-      setActivities(data);
-      processActivityData(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Произошла ошибка');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
-      fetchActivities(parsedUser.id);
-    } else {
-      setError('Пользователь не авторизован');
-      setLoading(false);
-    }
-  }, [fetchActivities]);
-
-  const processActivityData = (activities: Activity[]) => {
-    // Подсчет статусов
-    const statusCounts: { [key: string]: number } = {};
+  const processActivityData = useCallback((activities: HumActivity[]) => {
+    const statusCounts: Record<string, number> = {};
     const uniqueOrganizations = new Set<string>();
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
@@ -71,91 +33,91 @@ export default function UserDashboard() {
     let completedActivities = 0;
 
     activities.forEach(activity => {
-      // Подсчет статусов
       const status = activity.statusName.toLowerCase();
       statusCounts[status] = (statusCounts[status] || 0) + 1;
 
-      // Визиты в текущем месяце
       const visitDate = new Date(activity.visitDate);
       if (visitDate.getMonth() === currentMonth && visitDate.getFullYear() === currentYear) {
         visitsThisMonth++;
       }
 
-      // Длительность визита
-      const startTime = new Date(`2000-01-01T${activity.startTime}`);
-      const endTime = new Date(`2000-01-01T${activity.endTime}`);
-      const duration = (endTime.getTime() - startTime.getTime()) / (1000 * 60); // в минутах
+  
+      const duration = calculateDuration(activity.startTime, activity.endTime);
       totalDuration += duration;
 
-      // Завершенные активности
       if (status === 'закрыт') {
         completedActivities++;
         uniqueOrganizations.add(activity.orgName);
       }
     });
 
-    // Создание данных для круговой диаграммы
-    const totalActivities = activities.length;
-    const chartData: ChartData[] = [];
-
-    // Цвета для статусов
-    const statusColors: { [key: string]: string } = {
-      'запланирован': '#3b82f6',  // Синий
-      'открыт': '#10b981',         // Зеленый
-      'сохранен': '#f59e0b',       // Оранжевый
-      'закрыт': '#6b7280'          // Серый
-    };
-
-    Object.entries(statusCounts).forEach(([status, count]) => {
-      const percentage = totalActivities > 0 ? (count / totalActivities) * 100 : 0;
-      chartData.push({
-        label: status.charAt(0).toUpperCase() + status.slice(1),
-        value: count,
-        color: statusColors[status] || '#9ca3af',
-        percentage: Math.round(percentage * 10) / 10
-      });
-    });
-
+    const chartData = createChartData(statusCounts, activities.length);
     setActivityStats(chartData);
 
-    // Обновление статистики
-    const avgVisitDuration = activities.length > 0 ? Math.round(totalDuration / activities.length) : 0;
-  
     setDashboardStats({
-      totalActivities,
+      totalActivities: activities.length,
       completedActivities,
       avgVisitFrequency: completedActivities > 0 ? completedActivities / uniqueOrganizations.size : 0,
       visitsThisMonth,
-      avgVisitDuration
+      avgVisitDuration: activities.length > 0 ? Math.round(totalDuration / activities.length) : 0
     });
+  }, []);
+
+  useEffect(() => {
+    const loadDashboard = async () => {
+      if (!user) {
+        setError('Пользователь не авторизован');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const activities = await getApi(`/user/${user.id}/activ`);
+        processActivityData(activities);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : '???');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboard();
+  }, [processActivityData, user]);
+
+  const calculateDuration = (startTime: string, endTime: string): number => {
+    const [startHour, startMin] = startTime.split(':').map(Number);
+    const [endHour, endMin] = endTime.split(':').map(Number);
+    return (endHour * 60 + endMin) - (startHour * 60 + startMin);
+  };
+
+  const createChartData = (statusCounts: Record<string, number>, total: number): ChartData[] => {
+    const colors: Record<string, string> = {
+      'запланирован': '#3b82f6',
+      'открыт': '#10b981',
+      'сохранен': '#f59e0b',
+      'закрыт': '#6b7280'
+    };
+
+    return Object.entries(statusCounts).map(([status, count]) => ({
+      label: status.charAt(0).toUpperCase() + status.slice(1),
+      value: count,
+      color: colors[status] || '#9ca3af',
+      percentage: Math.round((count / total) * 1000) / 10
+    }));
   };
 
   return (
-    <div className="space-y-8">
-      {loading ? (
-        <div className="card rounded-2xl p-8 fade-in text-center">
-          <div className="text-lg" style={{ color: 'var(--muted-foreground)' }}>
-            Загрузка данных дашборда...
-          </div>
-        </div>
-      ) : error ? (
-        <div className="card rounded-2xl p-8 fade-in text-center">
-          <div className="text-lg" style={{ color: 'var(--error)' }}>
-            {error}
-          </div>
-        </div>
+    <LoadingWrapper loading={loading} loadingText="Загрузка данных дашборда...">
+      {error ? (
+        <ErrorMessage message={error} className="card rounded-2xl p-8 text-center" />
       ) : (
-        <>
-          {/* Дашборд с метриками */}
+        <div className="space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <ActivityChart 
-              activityStats={activityStats} 
-              dashboardStats={dashboardStats} 
-            />
+            <ActivityChart activityStats={activityStats} dashboardStats={dashboardStats} />
             <StatsCard stats={dashboardStats} />
           </div>
-        </>
+        </div>
       )}
-    </div>
+    </LoadingWrapper>
   );
 }

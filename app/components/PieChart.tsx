@@ -6,11 +6,9 @@ interface PieChartProps {
   data: ChartData[];
   size?: number;
   totalActivities: number;
-  hoveredSegment?: number | null;
-  onSegmentHover?: (index: number | null) => void;
 }
 
-export default function PieChart({ data, size = 200, totalActivities, hoveredSegment, onSegmentHover }: PieChartProps) {
+export default function PieChart({ data, size = 200, totalActivities }: PieChartProps) {
   const radius = size / 2 - 14;
   const circumference = 2 * Math.PI * radius;
   let cumulativePercentage = 0;
@@ -23,10 +21,6 @@ export default function PieChart({ data, size = 200, totalActivities, hoveredSeg
           const strokeDashoffset = -(cumulativePercentage / 100) * circumference;
           cumulativePercentage += item.percentage;
 
-          const isHovered = hoveredSegment === index;
-          const strokeWidth = isHovered ? 24 : 20;
-          const opacity = hoveredSegment !== null && !isHovered ? 0.5 : 1;
-
           return (
             <circle
               key={index}
@@ -35,30 +29,21 @@ export default function PieChart({ data, size = 200, totalActivities, hoveredSeg
               r={radius}
               fill="none"
               stroke={item.color}
-              strokeWidth={strokeWidth}
+              strokeWidth={20}
               strokeDasharray={strokeDasharray}
               strokeDashoffset={strokeDashoffset}
-              opacity={opacity}
-              className="transition-all duration-300 ease-out cursor-pointer"
-              style={{
-                strokeDashoffset: strokeDashoffset,
-                strokeDasharray: strokeDasharray
-              }}
-              onMouseEnter={() => onSegmentHover?.(index)}
-              onMouseLeave={() => onSegmentHover?.(null)}
+              className="transition-all duration-300 ease-out"
             />
           );
         })}
       </svg>
       
-      {/* Центральная информация */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="text-center">
           <div className="text-2xl font-bold gradient-text">{totalActivities}</div>
-          <div className="text-sm" style={{ color: 'var(--muted-foreground)' }}>Всего активностей</div>
+          <div className="text-sm text-gray-500">Всего активностей</div>
         </div>
       </div>
-
     </div>
   );
 }

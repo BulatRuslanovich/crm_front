@@ -1,71 +1,39 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ThemeToggle from '../components/ThemeToggle';
-import { handleApiError } from '../utils/errorHandler';
+import { FormField, FormButton, ErrorMessage } from '../components/shared';
+import { useForm } from '../hooks';
+import { RegisterForm } from '../types/common';
+import { validators } from '../utils/common';
+import { postApi } from '../utils/api';
 
 export default function RegisterPage() {
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    middleName: '',
-    login: '',
-    password: '',
-    confirmPassword: ''
-  });
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
   const router = useRouter();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    // Валидация паролей
-    if (formData.password !== formData.confirmPassword) {
-      setError('Пароли не совпадают');
-      setLoading(false);
-      return;
+  
+  const { data, loading, error, handleChange, handleSubmit } = useForm<RegisterForm>({
+    initialData: {
+      firstName: '',
+      lastName: '',
+      middleName: '',
+      login: '',
+      password: '',
+      confirmPassword: ''
+    },
+    validate: (data) => ({
+      firstName: validators.required(data.firstName, 'Имя'),
+      lastName: validators.required(data.lastName, 'Фамилия'),
+      middleName: null, // Отчество не обязательно
+      login: validators.required(data.login, 'Логин'),
+      password: validators.minLength(data.password, 6, 'Пароль'),
+      confirmPassword: validators.passwordMatch(data.password, data.confirmPassword)
+    }),
+    onSubmit: async (data) => {
+      await postApi('/user/register', data, false);
+      router.push('/login');
     }
-
-    if (formData.password.length < 6) {
-      setError('Пароль должен содержать минимум 6 символов');
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const response = await fetch('http://localhost:5555/api/user/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        // После успешной регистрации перенаправляем на страницу входа
-        router.push('/login');
-      } else {
-        const errorMessage = await handleApiError(response, 'Ошибка регистрации');
-        setError(errorMessage);
-      }
-    } catch {
-      setError('Ошибка подключения к серверу');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
+  });
 
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--background)' }}>
@@ -81,125 +49,81 @@ export default function RegisterPage() {
               Регистрация
             </h2>
             <p className="mt-2 text-sm" style={{ color: 'var(--muted-foreground)' }}>
-              Создайте новый аккаунт для доступа к системе
+              Создайте аккаунт для доступа к системе
             </p>
           </div>
           
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-4">
-              <div>
-                <label htmlFor="firstName" className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
-                  Имя *
-                </label>
-                <input
-                  id="firstName"
-                  name="firstName"
-                  type="text"
-                  required
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="Введите имя"
-                />
-              </div>
+              <FormField
+                name="firstName"
+                type="text"
+                label="Имя"
+                required
+                value={data.firstName}
+                onChange={handleChange}
+                placeholder="Введите имя"
+              />
               
-              <div>
-                <label htmlFor="lastName" className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
-                  Фамилия *
-                </label>
-                <input
-                  id="lastName"
-                  name="lastName"
-                  type="text"
-                  required
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="Введите фамилию"
-                />
-              </div>
+              <FormField
+                name="lastName"
+                type="text"
+                label="Фамилия"
+                required
+                value={data.lastName}
+                onChange={handleChange}
+                placeholder="Введите фамилию"
+              />
 
-              <div>
-                <label htmlFor="middleName" className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
-                  Отчество *
-                </label>
-                <input
-                  id="middleName"
-                  name="middleName"
-                  type="text"
-                  required
-                  value={formData.middleName}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="Введите отчество"
-                />
-              </div>
+              <FormField
+                name="middleName"
+                type="text"
+                label="Отчество"
+                value={data.middleName}
+                onChange={handleChange}
+                placeholder="Введите отчество"
+              />
 
-              <div>
-                <label htmlFor="login" className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
-                  Логин *
-                </label>
-                <input
-                  id="login"
-                  name="login"
-                  type="text"
-                  required
-                  value={formData.login}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="Введите логин"
-                />
-              </div>
+              <FormField
+                name="login"
+                type="text"
+                label="Логин"
+                required
+                value={data.login}
+                onChange={handleChange}
+                placeholder="Введите логин"
+              />
 
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
-                  Пароль *
-                </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="Введите пароль"
-                />
-              </div>
+              <FormField
+                name="password"
+                type="password"
+                label="Пароль"
+                required
+                value={data.password}
+                onChange={handleChange}
+                placeholder="Введите пароль"
+              />
 
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
-                  Подтверждение пароля *
-                </label>
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  required
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="Подтвердите пароль"
-                />
-              </div>
+              <FormField
+                name="confirmPassword"
+                type="password"
+                label="Подтверждение пароля"
+                required
+                value={data.confirmPassword}
+                onChange={handleChange}
+                placeholder="Подтвердите пароль"
+              />
             </div>
 
-            {error && (
-              <div className="error-message">
-                {error}
-              </div>
-            )}
+            <ErrorMessage message={error || ''} />
 
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="form-button hover-lift"
-                style={{ background: 'var(--success)' }}
-              >
-                {loading ? 'Регистрация...' : 'Зарегистрироваться'}
-              </button>
-            </div>
+            <FormButton
+              type="submit"
+              loading={loading}
+              loadingText="Регистрация..."
+            >
+              Зарегистрироваться
+            </FormButton>
 
             <div className="text-center">
               <Link 

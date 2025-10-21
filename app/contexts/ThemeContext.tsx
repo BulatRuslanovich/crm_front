@@ -16,18 +16,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Проверяем сохраненную тему или системные настройки
-    const savedTheme = localStorage.getItem('theme') as Theme | null;
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    const initialTheme = savedTheme || systemTheme;
-    
-    setTheme(initialTheme);
-    applyTheme(initialTheme);
+    const theme = localStorage.getItem('theme') as Theme | 'light';
+   
+    setTheme(theme);
+    applyTheme(theme);
     setMounted(true);
   }, []);
 
   useEffect(() => {
-    // Применяем тему сразу при монтировании, чтобы избежать мерцания
     if (mounted) {
       applyTheme(theme);
     }
@@ -49,7 +45,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('theme', newTheme);
   };
 
-  // Предотвращаем гидратацию с несоответствующими темами
   if (!mounted) {
     return null;
   }
@@ -63,8 +58,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
 export function useTheme() {
   const context = useContext(ThemeContext);
+  
   if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider');
+    throw new Error('theme context is null');
   }
+
   return context;
 }

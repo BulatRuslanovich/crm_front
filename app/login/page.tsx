@@ -1,61 +1,38 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ThemeToggle from '../components/ThemeToggle';
-import { handleApiError } from '../utils/errorHandler';
+import { FormField, FormButton, ErrorMessage } from '../components/shared';
+import { useForm } from '../hooks';
+import { LoginForm } from '../types/common';
+import { validators } from '../utils/common';
+import { postApi } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function LoginPage() {
-  const [formData, setFormData] = useState({
-    login: '',
-    password: ''
-  });
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { setTokens, setUser } = useAuth();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    try {
-      const response = await fetch('http://localhost:5555/api/user/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+  
+  const { data, loading, error, handleChange, handleSubmit } = useForm<LoginForm>({
+    initialData: {
+      login: '',
+      password: ''
+    },
+    validate: (data) => ({
+      login: validators.required(data.login, 'Логин'),
+      password: validators.required(data.password, 'Пароль')
+    }),
+    onSubmit: async (data) => {
+      const result = await postApi('/user/login', data, false);
+      setTokens({
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        setTokens({
-          accessToken: data.accessToken,
-          refreshToken: data.refreshToken
-        });
-        setUser(data.user);
-        router.push('/');
-      } else {
-        const errorMessage = await handleApiError(response, 'Неверный логин или пароль');
-        setError(errorMessage);
-      }
-    } catch {
-      setError('Ошибка подключения к серверу');
-    } finally {
-      setLoading(false);
+      setUser(result.user);
+      router.push('/');
     }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
+  });
 
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--background)' }}>
@@ -77,54 +54,35 @@ export default function LoginPage() {
           
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-4">
-              <div>
-                <label htmlFor="login" className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
-                  Логин
-                </label>
-                <input
-                  id="login"
-                  name="login"
-                  type="text"
-                  required
-                  value={formData.login}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="Введите логин"
-                />
-              </div>
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
-                  Пароль
-                </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="Введите пароль"
-                />
-              </div>
+              <FormField
+                name="login"
+                type="text"
+                label="Логин"
+                required
+                value={data.login}
+                onChange={handleChange}
+                placeholder="Введите логин"
+              />
+              <FormField
+                name="password"
+                type="password"
+                label="Пароль"
+                required
+                value={data.password}
+                onChange={handleChange}
+                placeholder="Введите пароль"
+              />
             </div>
 
-            {error && (
-              <div className="error-message">
-                {error}
-              </div>
-            )}
+            <ErrorMessage message={error || ''} />
 
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="form-button hover-lift"
-                style={{ background: 'var(--primary)' }}
-              >
-                {loading ? 'Вход...' : 'Войти'}
-              </button>
-            </div>
+            <FormButton
+              type="submit"
+              loading={loading}
+              loadingText="Вход..."
+            >
+              Войти
+            </FormButton>
 
             <div className="text-center">
               <Link 

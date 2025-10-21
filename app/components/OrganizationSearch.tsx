@@ -2,15 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Building2, Search, X } from 'lucide-react';
+import { Organization } from '../types/common';
+import { getApi } from '../utils/api';
+import { LoadingWrapper } from './shared/LoadingWrapper';
+import { ErrorMessage } from './shared/ErrorMessage';
 
-interface Organization {
-  orgId: number;
-  name: string;
-  inn: string;
-  latitude: number;
-  longitude: number;
-  address: string;
-}
 
 interface OrganizationSearchProps {
   onSelect: (org: Organization | null) => void;
@@ -35,7 +31,6 @@ export default function OrganizationSearch({
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Debounced search function
   const searchOrganizations = async (term: string) => {
     if (term.length < 2) {
       setOrganizations([]);
@@ -46,28 +41,7 @@ export default function OrganizationSearch({
     setErrorMessage(null);
 
     try {
-      const token = localStorage.getItem('token');
-
-      //
-      if (!token) {
-        throw new Error('Токен не найден');
-      }
-
-      const response = await fetch(
-        `http://localhost:5555/api/org?searchTerm=${encodeURIComponent(term)}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Ошибка при поиске организаций');
-      }
-
-      const data = await response.json();
+      const data = await getApi(`/org?searchTerm=${encodeURIComponent(term)}`);
       setOrganizations(data);
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Произошла ошибка');
@@ -187,61 +161,59 @@ export default function OrganizationSearch({
         {isOpen && (
           <div 
             ref={dropdownRef}
-            className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+            className="absolute z-50 w-full mt-1 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+            style={{
+              backgroundColor: 'var(--card)',
+              border: '1px solid var(--border)',
+              boxShadow: 'var(--shadow-lg)'
+            }}
           >
-            {loading && (
-              <div className="p-3 text-center text-sm text-gray-500">
-                Поиск...
-              </div>
-            )}
-            
-            {!loading && organizations.length === 0 && searchTerm.length >= 2 && (
-              <div className="p-3 text-center text-sm text-gray-500">
-                Организации не найдены
-              </div>
-            )}
-            
-            {!loading && searchTerm.length < 2 && (
-              <div className="p-3 text-center text-sm text-gray-500">
-                Введите минимум 2 символа для поиска
-              </div>
-            )}
+            <LoadingWrapper loading={loading} loadingText="Поиск..." className="min-h-[60px]">
+              {!loading && (
+                <>
+                  {organizations.length === 0 && searchTerm.length >= 2 && (
+                    <div className="p-3 text-center text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                      Не найдено
+                    </div>
+                  )}
+                  
+                  {searchTerm.length < 2 && (
+                    <div className="p-3 text-center text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                      Введите 2+ символа
+                    </div>
+                  )}
 
-            {organizations.map((org) => (
-              <button
-                key={org.orgId}
-                type="button"
-                onClick={() => handleSelect(org)}
-                className="w-full text-left p-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-600 last:border-b-0 transition-colors"
-              >
-                <div className="font-medium text-sm text-gray-900 dark:text-gray-100">{org.name}</div>
-                <div className="text-xs text-gray-600 dark:text-gray-400 mt-1 flex items-center gap-1">
-                  <span className="truncate">{org.address}</span>
-                </div>
-              </button>
-            ))}
+                  {organizations.map((org) => (
+                    <button
+                      key={org.orgId}
+                      type="button"
+                      onClick={() => handleSelect(org)}
+                      className="w-full text-left p-2 hover:bg-gray-100 dark:hover:bg-gray-700 border-b last:border-b-0 transition-colors"
+                      style={{ borderBottomColor: 'var(--border)' }}
+                    >
+                      <div className="font-medium text-sm">{org.name}</div>
+                      <div className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>
+                        {org.address}
+                      </div>
+                    </button>
+                  ))}
+                </>
+              )}
+            </LoadingWrapper>
           </div>
         )}
       </div>
 
-      {/* Selected organization info */}
       {selectedOrg && (
-        <div className="mt-2 p-2 rounded-lg" style={{ backgroundColor: 'var(--muted)' }}>
-          <div className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>
-            {selectedOrg.name}
-          </div>
+        <div className="mt-2 p-2 rounded-lg text-sm" style={{ backgroundColor: 'var(--muted)' }}>
+          <div className="font-medium">{selectedOrg.name}</div>
           <div className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>
             {selectedOrg.address}
           </div>
         </div>
       )}
 
-      {/* Error messages */}
-      {(error || errorMessage) && (
-        <div className="mt-2 text-sm text-red-600">
-          {error || errorMessage}
-        </div>
-      )}
+      <ErrorMessage message={error || errorMessage || ''} className="mt-2" />
     </div>
   );
 }

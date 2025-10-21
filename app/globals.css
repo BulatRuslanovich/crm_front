@@ -181,6 +181,14 @@ body {
   padding: 0.75rem;
 }
 
+.success-message {
+  color: var(--success);
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+}
+
 /* Dropdown меню - максимальный z-index */
 .user-dropdown-menu {
   z-index: 999999 !important;
@@ -225,8 +233,45 @@ body {
   opacity: 0.8 !important;
 }
 
-/* Для Firefox */
-.rbc-time-content {
-  scrollbar-width: thin !important;
-  scrollbar-color: var(--primary) var(--muted) !important;
+/* Универсальные стили для полей времени */
+.form-input[type="time"] {
+  font-family: monospace;
+  text-align: center;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
 }
+
+.form-input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.5);
+  cursor: pointer;
+}
+
+
+/* Стили для TimePicker темизации */
+.time-picker-theme {
+  background-color: var(--input) !important;
+  border-color: var(--input-border) !important;
+  color: var(--foreground) !important;
+}
+
+.time-picker-theme .ant-picker-input > input {
+  background-color: var(--input) !important;
+  color: var(--foreground) !important;
+}
+
+.time-picker-theme .ant-picker-input > input::placeholder {
+  color: var(--muted-foreground) !important;
+}
+
+.time-picker-theme:hover {
+  border-color: var(--primary) !important;
+}
+
+.time-picker-theme.ant-picker-focused {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.2) !important;
+}
+
+
+

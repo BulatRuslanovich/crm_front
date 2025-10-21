@@ -1,59 +1,54 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { User } from 'lucide-react';
+import { User as UserIcon } from 'lucide-react';
+import { User } from '../types/common';
 
-interface UserData {
-  id: number;
-  firstName: string;
-  lastName: string;
-  middleName: string;
-  login: string;
-}
 
 interface UserDropdownProps {
-  user: UserData;
+  user: User;
   onLogout: () => Promise<void>;
 }
 
 export default function UserDropdown({ user, onLogout }: UserDropdownProps) {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdown = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (!target.closest('.user-dropdown')) {
-        setIsDropdownOpen(false);
+      if (dropdown.current && !dropdown.current.contains(event.target as Node)) {
+        setIsOpen(false);
       }
-    };
-
-    if (isDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
     }
 
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isDropdownOpen]);
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isOpen]);
+  
 
   const handleLogout = async () => {
     await onLogout();
-    setIsDropdownOpen(false);
+    setIsOpen(false);
   };
 
+
   return (
-    <div className="relative user-dropdown">
-      <div 
+    <div className="relative" ref={dropdown}>
+      <button 
         className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-700" 
         style={{ background: 'var(--muted)' }}
-        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+        onClick={() => setIsOpen(!isOpen)}
       >
+
         <div className="w-8 h-8 rounded-full gradient-bg flex items-center justify-center">
           <span className="text-sm font-bold text-white">
             {user.firstName[0]}{user.lastName[0]}
           </span>
         </div>
+
         <div className="hidden sm:block">
           <div className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>
             {user.lastName} {user.firstName}
@@ -62,13 +57,19 @@ export default function UserDropdown({ user, onLogout }: UserDropdownProps) {
             {user.login}
           </div>
         </div>
-        <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+        <svg 
+          className={`w-4 h-4 ml-1 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
-      </div>
       
-      {/* Dropdown меню */}
-      {isDropdownOpen && (
+      </button>
+      
+      {isOpen && (
         <div 
           className="absolute right-0 mt-2 w-48 rounded-lg shadow-xl py-1 user-dropdown-menu"
           style={{
@@ -81,9 +82,9 @@ export default function UserDropdown({ user, onLogout }: UserDropdownProps) {
             href="/profile"
             className="flex items-center gap-3 px-4 py-2 text-sm transition-colors hover:opacity-80"
             style={{ color: 'var(--foreground)' }}
-            onClick={() => setIsDropdownOpen(false)}
+            onClick={() => setIsOpen(false)}
           >
-            <User size={16} />
+            <UserIcon size={16} />
             Профиль
           </Link>
           <button

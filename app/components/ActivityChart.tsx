@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { Activity } from 'lucide-react';
 import PieChart from './PieChart';
 import { ChartData, DashboardStats } from './types';
@@ -11,7 +10,6 @@ interface ActivityChartProps {
 }
 
 export default function ActivityChart({ activityStats, dashboardStats }: ActivityChartProps) {
-  const [hoveredSegment, setHoveredSegment] = useState<number | null>(null);
 
   return (
     <div className="card rounded-2xl p-6 fade-in">
@@ -25,8 +23,6 @@ export default function ActivityChart({ activityStats, dashboardStats }: Activit
           data={activityStats} 
           size={300} 
           totalActivities={dashboardStats.totalActivities}
-          hoveredSegment={hoveredSegment}
-          onSegmentHover={setHoveredSegment}
         />
       </div>
       
@@ -36,18 +32,14 @@ export default function ActivityChart({ activityStats, dashboardStats }: Activit
             key={index} 
             className="flex items-center justify-between p-2 rounded-lg transition-all duration-200 cursor-pointer"
             style={{
-              backgroundColor: hoveredSegment === index ? 'var(--muted)' : 'transparent',
               color: 'var(--input-foreground)'
             }}
-            onMouseEnter={() => setHoveredSegment(index)}
-            onMouseLeave={() => setHoveredSegment(null)}
           >
             <div className="flex items-center gap-3">
               <div 
                 className="w-4 h-4 rounded-full transition-all duration-200" 
                 style={{ 
                   backgroundColor: item.color,
-                  transform: hoveredSegment === index ? 'scale(1.2)' : 'scale(1)'
                 }}
               ></div>
               <span className="text-sm font-medium">{item.label}</span>

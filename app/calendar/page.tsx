@@ -2,28 +2,54 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calendar as CalendarIcon, RefreshCw, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Calendar as CalendarIcon, ArrowLeft, ArrowRight, Link, Activity as ActivityIcon } from 'lucide-react';
 import { Calendar, momentLocalizer, Views, View } from 'react-big-calendar';
 import moment from 'moment';
 import 'moment/locale/ru';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import ThemeToggle from '../components/ThemeToggle';
-import { checkResponse } from '../utils/errorHandler';
+import { getApi } from '../utils/api';
+import { HumActivity, User } from '../types/common';
+import UserDropdown from '../components/UserDropdown';
+import { useAuth } from '../contexts/AuthContext';
 
 // Настройка локализации
 moment.locale('ru');
 const localizer = momentLocalizer(moment);
 
-interface Activity {
-  activId: number;
-  usrId: number;
-  orgName: string;
-  statusName: string;
-  visitDate: string;
-  startTime: string;
-  endTime: string;
-  description: string;
-}
+
+const Navigation = ({ user, logout }: { user: User | null; logout: () => Promise<void> }) => (
+  <nav className="navbar">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="flex justify-between h-16">
+        <div className="flex items-center">
+          <Link href="/" className="text-xl font-semibold gradient-text">Lite CRM</Link>
+        </div>
+        <div className="flex items-center space-x-4">
+          <ThemeToggle />
+          
+          <Link
+            href="/calendar"
+            className="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover-lift flex items-center gap-2"
+            style={{ color: 'var(--foreground)', background: 'transparent' }}
+          >
+            <ActivityIcon size={16} />
+            Мои активности
+          </Link>
+          <Link
+            href="/"
+            className="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover-lift"
+            style={{ color: 'var(--foreground)', background: 'transparent' }}
+          >
+            На главную
+          </Link>
+
+          {user && <UserDropdown user={user} onLogout={logout} />}
+        </div>
+      </div>
+    </div>
+  </nav>
+);
 
 interface Visit {
   id: number;
@@ -42,35 +68,26 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<View>(Views.WEEK);
   const [date, setDate] = useState(new Date());
+  const { user, logout } = useAuth();
+  
+
+  
 
   const fetchVisits = useCallback(async () => {
     try {
       const userData = localStorage.getItem('user');
+
       if (!userData) {
         router.push('/login');
         return;
       }
 
       const user = JSON.parse(userData);
-      const token = localStorage.getItem('token');
       
-      if (!token) {
-        router.push('/login');
-        return;
-      }
-
-      const response = await fetch(`http://localhost:5555/api/user/${user.id}/activ`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      await checkResponse(response, 'Ошибка при загрузке активностей');
-      const data: Activity[] = await response.json();
+      const data: HumActivity[] = await getApi(`/user/${user.id}/activ`);
       
       // Преобразуем активности в визиты для календаря
-      const visitsData: Visit[] = data.map((activity: Activity) => {
+      const visitsData: Visit[] = data.map((activity: HumActivity) => {
         // Создаем дату из visitDate и startTime/endTime
         const visitDate = new Date(activity.visitDate);
         const startTime = activity.startTime.split(':');
@@ -100,7 +117,7 @@ export default function CalendarPage() {
     } finally {
       setLoading(false);
     }
-  }, [router]);
+  }, [router, user]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -157,41 +174,8 @@ export default function CalendarPage() {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--background)', color: 'var(--foreground)' }}>
-      
-    <div className="navbar">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <button
-                onClick={() => router.back()}
-                className="p-2 rounded-lg transition-colors mr-4"
-                style={{ 
-                  background: 'var(--muted)',
-                  color: 'var(--foreground)'
-                }}
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <h1 className="text-xl font-semibold gradient-text">Календарь визитов</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-                <button
-                    onClick={fetchVisits}
-                    className="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover-lift flex items-center gap-2"
-                    style={{
-                    background: 'var(--secondary)',
-                    color: 'var(--secondary-foreground)'
-                    }}
-                    title="Обновить данные"
-                >
-                    <RefreshCw className="w-4 h-4" />
-                    Обновить
-                </button>
-              <ThemeToggle />
-            </div>
-          </div>
-        </div>
-      </div>
+    
+      <Navigation user={user} logout={logout} />
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
@@ -302,9 +286,6 @@ export default function CalendarPage() {
                 min={new Date(2024, 0, 1, 7, 0)}
                 max={new Date(2024, 0, 1, 18, 0)}
                 showMultiDayTimes={true}
-                // popup={false}
-                // popupOffset={{ x: 10, y: 10 }}
-                // scrollToTime={new Date(2024, 0, 1, 8, 0)}
               />
             </div>
           </div>
