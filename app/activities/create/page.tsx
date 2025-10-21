@@ -11,6 +11,7 @@ import { CreateActivityForm, Organization } from '../../types/common';
 import { postApi } from '../../utils/api';
 import { FileText, Plus, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/app/contexts/AuthContext';
+import { handleApiError, logApiError } from '../../utils/errorHandler';
 
 export default function CreateActivityPage() {
   const { user } = useAuth();
@@ -62,7 +63,9 @@ export default function CreateActivityPage() {
         window.location.href = '/activities';
       }, 2000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Произошла ошибка');
+      logApiError(err, 'Create Activity');
+      const errorMessage = handleApiError(err);
+      setError(errorMessage);
     }
   };
 

@@ -1,17 +1,20 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ThemeToggle from '../components/ThemeToggle';
-import { SimpleInput, FormButton } from '../components/shared';
+import { SimpleInput, FormButton, ErrorMessage } from '../components/shared';
 import { useForm } from 'react-hook-form';
 import { LoginForm } from '../types/common';
 import { postApi } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
+import { handleApiError, logApiError } from '../utils/errorHandler';
 
 export default function LoginPage() {
   const router = useRouter();
   const { setTokens, setUser } = useAuth();
+  const [apiError, setApiError] = useState<string | null>(null);
   
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginForm>({
     defaultValues: {
@@ -21,6 +24,8 @@ export default function LoginPage() {
   });
 
   const onSubmit = async (data: LoginForm) => {
+    setApiError(null);
+    
     try {
       const result = await postApi('/user/login', data, false);
       setTokens({
@@ -30,7 +35,9 @@ export default function LoginPage() {
       setUser(result.user);
       router.push('/');
     } catch (error) {
-      console.error('Login error:', error);
+      logApiError(error, 'Login');
+      const errorMessage = handleApiError(error);
+      setApiError(errorMessage);
     }
   };
 
@@ -76,6 +83,8 @@ export default function LoginPage() {
                 required
               />
             </div>
+
+            <ErrorMessage message={apiError || ''} />
 
             <FormButton
               type="submit"

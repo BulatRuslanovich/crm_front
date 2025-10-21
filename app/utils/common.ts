@@ -11,12 +11,10 @@ export const formatters = {
   },
   
   formatTime: (time: string): string => {
-    // Убираем секунды если они есть (HH:MM:SS -> HH:MM)
     return time.substring(0, 5);
   },
   
   formatTime24: (time: string): string => {
-    // Принудительно форматируем в 24-часовой формат
     const [hours, minutes] = time.split(':');
     return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
   },

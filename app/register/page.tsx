@@ -1,15 +1,18 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ThemeToggle from '../components/ThemeToggle';
-import { SimpleInput, FormButton } from '../components/shared';
+import { SimpleInput, FormButton, ErrorMessage } from '../components/shared';
 import { useForm } from 'react-hook-form';
 import { RegisterForm } from '../types/common';
 import { postApi } from '../utils/api';
+import { handleApiError, logApiError } from '../utils/errorHandler';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const [apiError, setApiError] = useState<string | null>(null);
   
   const { register, handleSubmit, formState: { errors, isSubmitting }, watch } = useForm<RegisterForm>({
     defaultValues: {
@@ -25,11 +28,15 @@ export default function RegisterPage() {
   const password = watch('password');
 
   const onSubmit = async (data: RegisterForm) => {
+    setApiError(null);
+    
     try {
       await postApi('/user/register', data, false);
       router.push('/login');
     } catch (error) {
-      console.error('Registration error:', error);
+      logApiError(error, 'Register');
+      const errorMessage = handleApiError(error);
+      setApiError(errorMessage);
     }
   };
 
@@ -115,6 +122,8 @@ export default function RegisterPage() {
                 required
               />
             </div>
+
+            <ErrorMessage message={apiError || ''} />
 
             <FormButton
               type="submit"

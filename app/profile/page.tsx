@@ -9,6 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { putApi } from '../utils/api';
 import Link from 'next/link';
 import ProtectedRoute from '../components/ProtectedRoute';
+import { handleApiError, logApiError } from '../utils/errorHandler';
 
 interface ProfileForm {
   firstName: string;
@@ -76,7 +77,9 @@ export default function ProfilePage() {
       setAuthUser(updatedUser);
       setProfileSuccess('Профиль успешно обновлен!');
     } catch (err) {
-      setProfileError(err instanceof Error ? err.message : 'Произошла ошибка');
+      logApiError(err, 'Update Profile');
+      const errorMessage = handleApiError(err);
+      setProfileError(errorMessage);
     }
   };
 
@@ -111,7 +114,9 @@ export default function ProfilePage() {
       setPasswordSuccess('Пароль успешно изменен!');
       passwordForm.reset();
     } catch (err) {
-      setPasswordError(err instanceof Error ? err.message : 'Произошла ошибка');
+      logApiError(err, 'Change Password');
+      const errorMessage = handleApiError(err);
+      setPasswordError(errorMessage);
     }
   };
 

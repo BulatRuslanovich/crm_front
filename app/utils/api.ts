@@ -1,5 +1,39 @@
 'use client';
 
+// Классы ошибок API
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+    public statusText: string,
+    public response?: string
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
+export class ValidationError extends ApiError {
+  constructor(message: string, status: number, response?: string) {
+    super(message, status, 'Validation Error', response);
+    this.name = 'ValidationError';
+  }
+}
+
+export class AuthenticationError extends ApiError {
+  constructor(message: string = 'Authentication failed') {
+    super(message, 401, 'Unauthorized');
+    this.name = 'AuthenticationError';
+  }
+}
+
+export class NetworkError extends Error {
+  constructor(message: string = 'Network error') {
+    super(message);
+    this.name = 'NetworkError';
+  }
+}
+
 interface ApiOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
   body?: unknown;
@@ -49,35 +83,86 @@ class ApiClient {
       config.body = JSON.stringify(body);
     }
 
-    let response = await fetch(url, config);
+    try {
+      let response = await fetch(url, config);
 
-    if (response.status === 401 && requireAuth && this.refreshTokenCallback) {
-      const refreshed = await this.refreshTokenCallback();
-      
-      if (refreshed) {
-        const newHeaders = {
-          ...requestHeaders,
-          ...this.getAuthHeaders()
-        };
+      if (response.status === 401 && requireAuth && this.refreshTokenCallback) {
+        const refreshed = await this.refreshTokenCallback();
         
-        const newConfig: RequestInit = {
-          ...config,
-          headers: newHeaders
-        };
-        
-        response = await fetch(url, newConfig);
-      } else {
-        window.location.href = '/login';
-        throw new Error('Authentication failed');
+        if (refreshed) {
+          const newHeaders = {
+            ...requestHeaders,
+            ...this.getAuthHeaders()
+          };
+          
+          const newConfig: RequestInit = {
+            ...config,
+            headers: newHeaders
+          };
+          
+          response = await fetch(url, newConfig);
+        } else {
+          window.location.href = '/login';
+          throw new AuthenticationError();
+        }
       }
-    }
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`HTTP ${response.status}: ${errorText || response.statusText}`);
-    }
+      if (!response.ok) {
+        const errorText = await response.text();
+        
+        // Пытаемся парсить JSON ошибку
+        let errorMessage = errorText || response.statusText;
+        let parsedError: unknown = null;
+        
+        try {
+          parsedError = JSON.parse(errorText);
+          if (parsedError && typeof parsedError === 'object' && 'message' in parsedError) {
+            errorMessage = (parsedError as { message: string }).message;
+          } else if (parsedError && typeof parsedError === 'object' && 'error' in parsedError) {
+            errorMessage = (parsedError as { error: string }).error;
+          }
+        } catch {
+          // Если не удалось парсить JSON, используем текст как есть
+        }
 
-    return await response.json();
+        // Создаем специфичные ошибки в зависимости от статуса
+        switch (response.status) {
+          case 400:
+            throw new ValidationError(errorMessage, response.status, errorText);
+          case 401:
+            throw new AuthenticationError(errorMessage);
+          case 403:
+            throw new ApiError(errorMessage, response.status, 'Forbidden', errorText);
+          case 404:
+            throw new ApiError(errorMessage, response.status, 'Not Found', errorText);
+          case 422:
+            throw new ValidationError(errorMessage, response.status, errorText);
+          case 500:
+            throw new ApiError('Внутренняя ошибка сервера', response.status, 'Internal Server Error', errorText);
+          default:
+            throw new ApiError(errorMessage, response.status, response.statusText, errorText);
+        }
+      }
+
+      return await response.json();
+    } catch (error) {
+      // Обработка сетевых ошибок
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new NetworkError('Ошибка сети. Проверьте подключение к интернету.');
+      }
+      
+      // Если это уже наша ошибка, просто пробрасываем её
+      if (error instanceof ApiError || error instanceof NetworkError) {
+        throw error;
+      }
+      
+      // Для остальных ошибок создаем общую ошибку API
+      throw new ApiError(
+        error instanceof Error ? error.message : 'Неизвестная ошибка',
+        0,
+        'Unknown Error'
+      );
+    }
   }
 
   // Удобные методы
