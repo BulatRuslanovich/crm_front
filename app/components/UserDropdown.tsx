@@ -14,7 +14,7 @@ interface UserData {
 
 interface UserDropdownProps {
   user: UserData;
-  onLogout: () => void;
+  onLogout: () => Promise<void>;
 }
 
 export default function UserDropdown({ user, onLogout }: UserDropdownProps) {
@@ -37,8 +37,8 @@ export default function UserDropdown({ user, onLogout }: UserDropdownProps) {
     };
   }, [isDropdownOpen]);
 
-  const handleLogout = () => {
-    onLogout();
+  const handleLogout = async () => {
+    await onLogout();
     setIsDropdownOpen(false);
   };
 

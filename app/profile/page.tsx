@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { User, Eye, EyeOff, Save, ArrowLeft } from 'lucide-react';
 import ThemeToggle from '../components/ThemeToggle';
 import { checkResponse } from '../utils/errorHandler';
+import { useAuth, useAuthenticatedFetch } from '../contexts/AuthContext';
+import ProtectedRoute from '../components/ProtectedRoute';
 
 interface UserProfile {
   firstName: string;
@@ -22,6 +24,8 @@ interface PasswordChange {
 
 export default function ProfilePage() {
   const router = useRouter();
+  const { user: authUser, setUser: setAuthUser } = useAuth();
+  const authenticatedFetch = useAuthenticatedFetch();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -52,16 +56,14 @@ export default function ProfilePage() {
   });
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
-      setProfileData(parsedUser);
+    if (authUser) {
+      setUser(authUser);
+      setProfileData(authUser);
     } else {
       router.push('/login');
     }
     setLoading(false);
-  }, [router]);
+  }, [authUser, router]);
 
   const handleProfileChange = (field: keyof UserProfile, value: string) => {
     setProfileData(prev => ({
@@ -92,15 +94,9 @@ export default function ProfilePage() {
     setSuccess(null);
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('Токен не найден');
-      }
-
-      const response = await fetch(`http://localhost:5555/api/user/${user.id}`, {
+      const response = await authenticatedFetch(`http://localhost:5555/api/user/${user.id}`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -113,10 +109,9 @@ export default function ProfilePage() {
 
       await checkResponse(response, 'Ошибка при обновлении профиля');
 
-      // Обновляем данные в localStorage
+      // Обновляем данные в контексте
       const updatedUser = { ...user, ...profileData };
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      setUser(updatedUser);
+      setAuthUser(updatedUser);
       setSuccess('Профиль успешно обновлен!');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Произошла ошибка');
@@ -154,16 +149,10 @@ export default function ProfilePage() {
     setSuccess(null);
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('Токен не найден');
-      }
-
       // Используем существующий эндпоинт для обновления пароля
-      const response = await fetch(`http://localhost:5555/api/user/${user.id}`, {
+      const response = await authenticatedFetch(`http://localhost:5555/api/user/${user.id}`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -202,7 +191,8 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--background)', color: 'var(--foreground)' }}>
+    <ProtectedRoute>
+      <div className="min-h-screen" style={{ background: 'var(--background)', color: 'var(--foreground)' }}>
       {/* Header */}
       <div className="navbar">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -403,5 +393,6 @@ export default function ProfilePage() {
         </div>
       </main>
     </div>
+    </ProtectedRoute>
   );
 }

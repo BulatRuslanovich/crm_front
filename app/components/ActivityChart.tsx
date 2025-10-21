@@ -34,7 +34,11 @@ export default function ActivityChart({ activityStats, dashboardStats }: Activit
         {activityStats.map((item, index) => (
           <div 
             key={index} 
-            className="flex items-center justify-between p-2 rounded-lg transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
+            className="flex items-center justify-between p-2 rounded-lg transition-all duration-200 cursor-pointer"
+            style={{
+              backgroundColor: hoveredSegment === index ? 'var(--muted)' : 'transparent',
+              color: 'var(--input-foreground)'
+            }}
             onMouseEnter={() => setHoveredSegment(index)}
             onMouseLeave={() => setHoveredSegment(null)}
           >

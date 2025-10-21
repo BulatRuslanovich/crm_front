@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Calendar as CalendarIcon, RefreshCw, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Calendar, momentLocalizer, Views, View } from 'react-big-calendar';
@@ -43,16 +43,7 @@ export default function CalendarPage() {
   const [view, setView] = useState<View>(Views.WEEK);
   const [date, setDate] = useState(new Date());
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
-    fetchVisits();
-  }, [router]);
-
-  const fetchVisits = async () => {
+  const fetchVisits = useCallback(async () => {
     try {
       const userData = localStorage.getItem('user');
       if (!userData) {
@@ -93,7 +84,7 @@ export default function CalendarPage() {
         
         return {
           id: activity.activId,
-          title: `${activity.orgName}`,
+          title: `Визит в организацию`,
           description: activity.description,
           start: startDateTime,
           end: endDateTime,
@@ -109,7 +100,16 @@ export default function CalendarPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      router.push('/login');
+      return;
+    }
+    fetchVisits();
+  }, [router, fetchVisits]);
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {

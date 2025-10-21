@@ -1,26 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import ThemeToggle from './components/ThemeToggle';
 import UserDashboard from './components/UserDashboard';
 import UserDropdown from './components/UserDropdown';
+import { useAuth } from './contexts/AuthContext';
 import { ArrowRight, Sparkles, Pill, BarChart3, Activity, MapPin, Clock, Calendar } from 'lucide-react';
 
 export default function Home() {
-  const [user, setUser] = useState<{id: number, firstName: string, lastName: string, middleName: string, login: string} | null>(null);
-  useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
-    }
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    setUser(null);
-  };
+  const { user, logout, isAuthenticated } = useAuth();
 
   const features = [
     {
@@ -61,7 +49,7 @@ export default function Home() {
             </div>
             <div className="flex items-center space-x-4">
               <ThemeToggle />
-              {user ? (
+              {isAuthenticated && user ? (
                 <>
                   <Link
                     href="/activities"
@@ -87,7 +75,7 @@ export default function Home() {
                     Календарь
                   </Link>
                   
-                  <UserDropdown user={user} onLogout={handleLogout} />
+                  <UserDropdown user={user} onLogout={logout} />
                 </>
               ) : (
                 <>
@@ -120,7 +108,7 @@ export default function Home() {
       </nav>
 
       <main className="relative z-0">
-        {user ? (
+        {isAuthenticated && user ? (
           <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
             <div className="px-4 py-6 sm:px-0">
               <UserDashboard />

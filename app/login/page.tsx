@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ThemeToggle from '../components/ThemeToggle';
 import { handleApiError } from '../utils/errorHandler';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -14,6 +15,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { setTokens, setUser } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,10 +33,11 @@ export default function LoginPage() {
 
       if (response.ok) {
         const data = await response.json();
-        // Сохраняем токен в localStorage
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        // Перенаправляем на главную страницу
+        setTokens({
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken
+        });
+        setUser(data.user);
         router.push('/');
       } else {
         const errorMessage = await handleApiError(response, 'Неверный логин или пароль');

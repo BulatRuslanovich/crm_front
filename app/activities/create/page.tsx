@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ThemeToggle from '../../components/ThemeToggle';
-import { Calendar, Clock, Building2, FileText, Plus, ArrowLeft } from 'lucide-react';
+import OrganizationSearch from '../../components/OrganizationSearch';
+import { Calendar, Clock, FileText, Plus, ArrowLeft } from 'lucide-react';
 
 interface User {
   firstName: string;
@@ -34,7 +35,7 @@ interface CreateActivityForm {
 export default function CreateActivityPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,41 +54,12 @@ export default function CreateActivityPage() {
     if (userData) {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
-      fetchOrganizations();
+      setLoading(false);
     } else {
       setError('Пользователь не авторизован');
       setLoading(false);
     }
   }, []);
-
-  const fetchOrganizations = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('Токен не найден');
-        setLoading(false);
-        return;
-      }
-
-      const response = await fetch('http://localhost:5555/api/org?page=1&pageSize=100', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Ошибка при загрузке организаций');
-      }
-
-      const data = await response.json();
-      setOrganizations(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Произошла ошибка');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,7 +73,7 @@ export default function CreateActivityPage() {
       }
 
       // Валидация
-      if (!formData.orgId) {
+      if (!selectedOrg) {
         throw new Error('Выберите организацию');
       }
       if (!formData.visitDate) {
@@ -119,7 +91,7 @@ export default function CreateActivityPage() {
 
       const payload = {
         usrId: user.id,
-        orgId: formData.orgId,
+        orgId: selectedOrg.orgId,
         visitDate: formData.visitDate,
         startTime: formData.startTime,
         endTime: formData.endTime,
@@ -157,6 +129,21 @@ export default function CreateActivityPage() {
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleOrgSelect = (org: Organization | null) => {
+    setSelectedOrg(org);
+    if (org) {
+      setFormData(prev => ({
+        ...prev,
+        orgId: org.orgId
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        orgId: 0
+      }));
+    }
   };
 
   const handleLogout = () => {
@@ -345,27 +332,11 @@ export default function CreateActivityPage() {
           <div className="card rounded-xl p-8 fade-in">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Организация */}
-              <div>
-                <label htmlFor="orgId" className="block text-sm font-medium mb-2 flex items-center gap-2">
-                  <Building2 size={16} />
-                  Организация *
-                </label>
-                <select
-                  id="orgId"
-                  name="orgId"
-                  required
-                  value={formData.orgId}
-                  onChange={handleChange}
-                  className="form-input"
-                >
-                  <option value={0}>Выберите организацию</option>
-                  {organizations.map((org) => (
-                    <option key={org.orgId} value={org.orgId}>
-                      {org.name} - {org.address}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <OrganizationSearch
+                onSelect={handleOrgSelect}
+                selectedOrg={selectedOrg}
+                error={error && error.includes('организацию') ? error : undefined}
+              />
 
               {/* Дата визита */}
               <div>
