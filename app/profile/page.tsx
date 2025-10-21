@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { User, Eye, EyeOff, Save, ArrowLeft } from 'lucide-react';
+import { User, Eye, EyeOff, Save } from 'lucide-react';
 import ThemeToggle from '../components/ThemeToggle';
 import { FormField, FormButton, ErrorMessage, SuccessMessage } from '../components/shared';
 import { useAuth } from '../contexts/AuthContext';
-import ProtectedRoute from '../components/ProtectedRoute';
 import { putApi } from '../utils/api';
+import Link from 'next/link';
 
 interface UserProfile {
   firstName: string;
@@ -174,35 +174,32 @@ export default function ProfilePage() {
   }
 
   return (
-    <ProtectedRoute>
+    // <ProtectedRoute>
       <div className="min-h-screen" style={{ background: 'var(--background)', color: 'var(--foreground)' }}>
-      {/* Header */}
-      <div className="navbar">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <button
-                onClick={() => router.back()}
-                className="p-2 rounded-lg transition-colors mr-4"
-                style={{ 
-                  background: 'var(--muted)',
-                  color: 'var(--foreground)'
-                }}
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <h1 className="text-xl font-semibold gradient-text">Профиль пользователя</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <ThemeToggle />
+        <nav className="navbar relative z-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between h-16">
+              <div className="flex items-center">
+                <h1 className="text-xl font-semibold gradient-text flex items-center gap-2">
+                  Профиль пользователя
+                </h1>
+              </div>
+              <div className="flex items-center space-x-4">
+                    <Link
+                  href="/"
+                  className="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover-lift"
+                  style={{ color: 'var(--foreground)', background: 'transparent' }}
+                >
+                  На главную
+                </Link>
+                <ThemeToggle />  
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        </nav>
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-        {/* Сообщения об ошибках и успехе */}
         <ErrorMessage message={error || ''} />
         <SuccessMessage message={success || ''} />
 
@@ -351,6 +348,6 @@ export default function ProfilePage() {
         </div>
       </main>
     </div>
-    </ProtectedRoute>
+    // </ProtectedRoute>
   );
 }

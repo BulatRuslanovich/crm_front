@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calendar as CalendarIcon, ArrowLeft, ArrowRight, Link, Activity as ActivityIcon } from 'lucide-react';
+import { Calendar as CalendarIcon, ArrowLeft, ArrowRight, Activity as ActivityIcon } from 'lucide-react';
 import { Calendar, momentLocalizer, Views, View } from 'react-big-calendar';
 import moment from 'moment';
 import 'moment/locale/ru';
@@ -12,6 +12,7 @@ import { getApi } from '../utils/api';
 import { HumActivity, User } from '../types/common';
 import UserDropdown from '../components/UserDropdown';
 import { useAuth } from '../contexts/AuthContext';
+import Link from 'next/link';
 
 // Настройка локализации
 moment.locale('ru');
@@ -25,9 +26,8 @@ const Navigation = ({ user, logout }: { user: User | null; logout: () => Promise
         <div className="flex items-center">
           <Link href="/" className="text-xl font-semibold gradient-text">Lite CRM</Link>
         </div>
+
         <div className="flex items-center space-x-4">
-          <ThemeToggle />
-          
           <Link
             href="/calendar"
             className="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover-lift flex items-center gap-2"
@@ -45,6 +45,7 @@ const Navigation = ({ user, logout }: { user: User | null; logout: () => Promise
           </Link>
 
           {user && <UserDropdown user={user} onLogout={logout} />}
+          <ThemeToggle />
         </div>
       </div>
     </div>

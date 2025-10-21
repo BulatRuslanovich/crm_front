@@ -21,8 +21,7 @@ export default function Home() {
               </h1>
             </div>
             <div className="flex items-center space-x-4">
-              <ThemeToggle />
-              {isAuthenticated && user ? (
+              {isAuthenticated && user &&
                 <>
                   <Link
                     href="/activities"
@@ -49,10 +48,8 @@ export default function Home() {
                   </Link>
                   
                   <UserDropdown user={user} onLogout={logout} />
-                </>
-              ) : (
-                <></>
-              )}
+                  <ThemeToggle />
+                </>}
             </div>
           </div>
         </div>
