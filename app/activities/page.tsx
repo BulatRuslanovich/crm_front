@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import ThemeToggle from '../components/ThemeToggle';
 import UserDropdown from '../components/UserDropdown';
+import { useAuth } from '../contexts/AuthContext';
 import { Calendar, Clock, Building2, FileText, ChevronDown, Plus, CalendarCheck, PlayCircle, CheckCircle, Trash2, Edit } from 'lucide-react';
 import { checkResponse } from '../utils/errorHandler';
 
@@ -18,17 +19,9 @@ interface Activity {
   description: string;
 }
 
-interface User {
-  firstName: string;
-  lastName: string;
-  middleName: string;
-  login: string;
-  id: number;
-}
-
 
 export default function ActivitiesPage() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, logout } = useAuth();
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,16 +30,13 @@ export default function ActivitiesPage() {
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
-      fetchActivities(parsedUser.id);
+    if (user) {
+      fetchActivities(user.id);
     } else {
       setError('Пользователь не авторизован');
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   const fetchActivities = async (userId: number) => {
     try {
@@ -73,12 +63,6 @@ export default function ActivitiesPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    window.location.href = '/';
   };
 
   const toggleExpanded = (activityId: number) => {
@@ -296,7 +280,7 @@ export default function ActivitiesPage() {
                     На главную
                   </Link>
                 
-                  <UserDropdown user={user} onLogout={handleLogout} />
+                  <UserDropdown user={user} onLogout={logout} />
                 </>
               ) : (
                 <>

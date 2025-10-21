@@ -1,7 +1,6 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
-import { useTokenRefresh } from '../hooks/useTokenRefresh';
 
 interface AuthTokens {
   accessToken: string;
@@ -76,6 +75,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const logout = useCallback(async () => {
+    try {
+      if (tokens?.refreshToken) {
+        await fetch('http://localhost:5555/api/user/logout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            refreshToken: tokens.refreshToken
+          }),
+        });
+      }
+    } catch (error) {
+      console.error('Error during logout:', error);
+    } finally {
+      setTokens(null);
+      setUser(null);
+    }
+  }, [tokens?.refreshToken, setTokens, setUser]);
+
   const refreshAccessToken = useCallback(async (): Promise<boolean> => {
     if (isRefreshing || !tokens?.refreshToken) {
       return false;
@@ -113,30 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsRefreshing(false);
     }
-  }, [tokens?.refreshToken, isRefreshing]);
-
-  const logout = useCallback(async () => {
-    try {
-      // Отзываем refresh token на сервере
-      if (tokens?.refreshToken) {
-        await fetch('http://localhost:5555/api/user/logout', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            refreshToken: tokens.refreshToken
-          }),
-        });
-      }
-    } catch (error) {
-      console.error('Error during logout:', error);
-    } finally {
-      // Очищаем состояние независимо от результата запроса
-      setTokens(null);
-      setUser(null);
-    }
-  }, [tokens?.refreshToken, setTokens, setUser]);
+  }, [tokens?.refreshToken, isRefreshing, logout, setTokens]);
 
   const isAuthenticated = !!(tokens?.accessToken && user);
 
@@ -220,7 +217,6 @@ export function useAuthenticatedFetch() {
   return authenticatedFetch;
 }
 
-// Хук для проверки аутентификации и автоматического перенаправления
 export function useRequireAuth() {
   const { isAuthenticated, isRefreshing } = useAuth();
   
