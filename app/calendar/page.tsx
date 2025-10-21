@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import { Calendar as CalendarIcon, ArrowLeft, ArrowRight, Activity as ActivityIcon } from 'lucide-react';
 import { Calendar, momentLocalizer, Views, View } from 'react-big-calendar';
 import moment from 'moment';
 import 'moment/locale/ru';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import ThemeToggle from '../components/ThemeToggle';
+import ProtectedRoute from '../components/ProtectedRoute';
 import { getApi } from '../utils/api';
 import { HumActivity, User } from '../types/common';
 import UserDropdown from '../components/UserDropdown';
@@ -29,7 +29,7 @@ const Navigation = ({ user, logout }: { user: User | null; logout: () => Promise
 
         <div className="flex items-center space-x-4">
           <Link
-            href="/calendar"
+            href="/activities"
             className="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover-lift flex items-center gap-2"
             style={{ color: 'var(--foreground)', background: 'transparent' }}
           >
@@ -64,7 +64,6 @@ interface Visit {
 }
 
 export default function CalendarPage() {
-  const router = useRouter();
   const [visits, setVisits] = useState<Visit[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<View>(Views.WEEK);
@@ -76,14 +75,7 @@ export default function CalendarPage() {
 
   const fetchVisits = useCallback(async () => {
     try {
-      const userData = localStorage.getItem('user');
-
-      if (!userData) {
-        router.push('/login');
-        return;
-      }
-
-      const user = JSON.parse(userData);
+      if (!user) return;
       
       const data: HumActivity[] = await getApi(`/user/${user.id}/activ`);
       
@@ -118,16 +110,11 @@ export default function CalendarPage() {
     } finally {
       setLoading(false);
     }
-  }, [router, user]);
+  }, [user]);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
-      return;
-    }
     fetchVisits();
-  }, [router, fetchVisits]);
+  }, [fetchVisits]);
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -174,7 +161,8 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--background)', color: 'var(--foreground)' }}>
+    <ProtectedRoute>
+      <div className="min-h-screen" style={{ background: 'var(--background)', color: 'var(--foreground)' }}>
     
       <Navigation user={user} logout={logout} />
 
@@ -292,6 +280,7 @@ export default function CalendarPage() {
           </div>
         </div>
       </main>
-    </div>
+      </div>
+    </ProtectedRoute>
   );
 }

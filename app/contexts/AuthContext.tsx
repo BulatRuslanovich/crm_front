@@ -1,8 +1,9 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
-import { initApi, postApi } from '../utils/api';
+import { initApi, postApi, setRefreshTokenCallback } from '../utils/api';
 import { User } from '../types/common';
+import { decodeJWT } from '../utils/tokenUtils';
 
 interface AuthTokens {
   accessToken: string;
@@ -58,15 +59,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  useEffect(() => {
-    const getAuthHeaders = (): Record<string, string> => {
-      const token = localStorage.getItem('token');
-      return token ? { Authorization: `Bearer ${token}` } : {};
-    };
-    
-    initApi('http://localhost:5555/api', getAuthHeaders);
-  }, []);
-
   const setUser = useCallback((newUser: User | null) => {
     setUserState(newUser);
     
@@ -113,7 +105,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [tokens?.refreshToken, isRefreshing, logout, setTokens]);
 
-  const isAuthenticated = !!(tokens?.accessToken && user);
+  // Обновляем API клиент при изменении токенов
+  useEffect(() => {
+    const getAuthHeaders = (): Record<string, string> => {
+      const token = tokens?.accessToken || localStorage.getItem('token');
+      return token ? { Authorization: `Bearer ${token}` } : {};
+    };
+    
+    initApi('http://localhost:5555/api', getAuthHeaders);
+    
+    // Устанавливаем callback для обновления токенов
+    setRefreshTokenCallback(refreshAccessToken);
+  }, [tokens?.accessToken, refreshAccessToken]);
+
+  // Автоматическое обновление токенов перед истечением
+  useEffect(() => {
+    if (!tokens?.accessToken) return;
+
+    const checkTokenExpiration = () => {
+      const tokenInfo = decodeJWT(tokens.accessToken);
+      if (tokenInfo) {
+        const now = Math.floor(Date.now() / 1000);
+        const fiveMinutes = 5 * 60;
+        
+        if ((tokenInfo.exp - now) < fiveMinutes) {
+          refreshAccessToken();
+        }
+      }
+    };
+
+    // Проверяем каждые 2 минуты
+    const interval = setInterval(checkTokenExpiration, 2 * 60 * 1000);
+    
+    return () => clearInterval(interval);
+  }, [tokens?.accessToken, refreshAccessToken]);
+
+  const isAuthenticated = !!(tokens?.accessToken);
 
   return (
     <AuthContext.Provider value={{ 
@@ -139,64 +166,20 @@ export function useAuth() {
   return context;
 }
 
-export function useAuthenticatedFetch() {
-  const { tokens, refreshAccessToken, logout } = useAuth();
-
-  const authenticatedFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
-    if (!tokens?.accessToken) {
-      throw new Error('No access token available');
-    }
-
-    const headers = {
-      ...options.headers,
-      'Authorization': `Bearer ${tokens.accessToken}`,
-    };
-
-    let response = await fetch(url, {
-      ...options,
-      headers,
-    });
-
-    if (response.status === 401) {
-      const refreshed = await refreshAccessToken();
-      
-      if (refreshed) {
-        const newAccessToken = localStorage.getItem('token');
-        if (newAccessToken) {
-          const newHeaders = {
-            ...options.headers,
-            'Authorization': `Bearer ${newAccessToken}`,
-          };
-          
-          response = await fetch(url, {
-            ...options,
-            headers: newHeaders,
-          });
-        } else {
-          await logout();
-          window.location.href = '/login';
-          throw new Error('Authentication failed');
-        }
-      } else {
-        window.location.href = '/login';
-        throw new Error('Authentication failed');
-      }
-    }
-
-    return response;
-  };
-
-  return authenticatedFetch;
-}
-
 export function useRequireAuth() {
-  const { isAuthenticated, isRefreshing } = useAuth();
+  const { isAuthenticated, isRefreshing, tokens } = useAuth();
   
   useEffect(() => {
-    if (!isRefreshing && !isAuthenticated) {
-      window.location.href = '/login';
+    // Не перенаправляем, если идет процесс обновления токенов или если токены еще загружаются
+    if (!isRefreshing && !isAuthenticated && tokens === null) {
+      // Добавляем небольшую задержку, чтобы дать время на загрузку из localStorage
+      const timer = setTimeout(() => {
+        window.location.href = '/login';
+      }, 100);
+      
+      return () => clearTimeout(timer);
     }
-  }, [isAuthenticated, isRefreshing]);
+  }, [isAuthenticated, isRefreshing, tokens]);
   
   return { isAuthenticated, isRefreshing };
 }

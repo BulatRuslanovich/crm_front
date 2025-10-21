@@ -3,37 +3,35 @@
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ThemeToggle from '../components/ThemeToggle';
-import { FormField, FormButton, ErrorMessage } from '../components/shared';
-import { useForm } from '../hooks';
+import { SimpleInput, FormButton } from '../components/shared';
+import { useForm } from 'react-hook-form';
 import { RegisterForm } from '../types/common';
-import { validators } from '../utils/common';
 import { postApi } from '../utils/api';
 
 export default function RegisterPage() {
   const router = useRouter();
   
-  const { data, loading, error, handleChange, handleSubmit } = useForm<RegisterForm>({
-    initialData: {
+  const { register, handleSubmit, formState: { errors, isSubmitting }, watch } = useForm<RegisterForm>({
+    defaultValues: {
       firstName: '',
       lastName: '',
       middleName: '',
       login: '',
       password: '',
       confirmPassword: ''
-    },
-    validate: (data) => ({
-      firstName: validators.required(data.firstName, 'Имя'),
-      lastName: validators.required(data.lastName, 'Фамилия'),
-      middleName: null, // Отчество не обязательно
-      login: validators.required(data.login, 'Логин'),
-      password: validators.minLength(data.password, 6, 'Пароль'),
-      confirmPassword: validators.passwordMatch(data.password, data.confirmPassword)
-    }),
-    onSubmit: async (data) => {
-      await postApi('/user/register', data, false);
-      router.push('/login');
     }
   });
+
+  const password = watch('password');
+
+  const onSubmit = async (data: RegisterForm) => {
+    try {
+      await postApi('/user/register', data, false);
+      router.push('/login');
+    } catch (error) {
+      console.error('Registration error:', error);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--background)' }}>
@@ -53,73 +51,74 @@ export default function RegisterPage() {
             </p>
           </div>
           
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <div className="space-y-4">
-              <FormField
-                name="firstName"
-                type="text"
+              <SimpleInput
+                {...register('firstName', { 
+                  required: 'Имя обязательно' 
+                })}
                 label="Имя"
-                required
-                value={data.firstName}
-                onChange={handleChange}
                 placeholder="Введите имя"
+                error={errors.firstName?.message}
+                required
               />
               
-              <FormField
-                name="lastName"
-                type="text"
+              <SimpleInput
+                {...register('lastName', { 
+                  required: 'Фамилия обязательна' 
+                })}
                 label="Фамилия"
-                required
-                value={data.lastName}
-                onChange={handleChange}
                 placeholder="Введите фамилию"
-              />
-
-              <FormField
-                name="middleName"
-                type="text"
-                label="Отчество"
-                value={data.middleName}
-                onChange={handleChange}
-                placeholder="Введите отчество"
-              />
-
-              <FormField
-                name="login"
-                type="text"
-                label="Логин"
+                error={errors.lastName?.message}
                 required
-                value={data.login}
-                onChange={handleChange}
-                placeholder="Введите логин"
               />
 
-              <FormField
-                name="password"
+              <SimpleInput
+                {...register('middleName')}
+                label="Отчество"
+                placeholder="Введите отчество"
+                error={errors.middleName?.message}
+              />
+
+              <SimpleInput
+                {...register('login', { 
+                  required: 'Логин обязателен',
+                  minLength: { value: 3, message: 'Минимум 3 символа' }
+                })}
+                label="Логин"
+                placeholder="Введите логин"
+                error={errors.login?.message}
+                required
+              />
+
+              <SimpleInput
+                {...register('password', { 
+                  required: 'Пароль обязателен',
+                  minLength: { value: 6, message: 'Минимум 6 символов' }
+                })}
                 type="password"
                 label="Пароль"
-                required
-                value={data.password}
-                onChange={handleChange}
                 placeholder="Введите пароль"
+                error={errors.password?.message}
+                required
               />
 
-              <FormField
-                name="confirmPassword"
+              <SimpleInput
+                {...register('confirmPassword', { 
+                  required: 'Подтверждение пароля обязательно',
+                  validate: (value) => value === password || 'Пароли не совпадают'
+                })}
                 type="password"
                 label="Подтверждение пароля"
-                required
-                value={data.confirmPassword}
-                onChange={handleChange}
                 placeholder="Подтвердите пароль"
+                error={errors.confirmPassword?.message}
+                required
               />
             </div>
 
-            <ErrorMessage message={error || ''} />
-
             <FormButton
               type="submit"
-              loading={loading}
+              loading={isSubmitting}
               loadingText="Регистрация..."
             >
               Зарегистрироваться

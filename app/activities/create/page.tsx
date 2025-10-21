@@ -1,61 +1,50 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ThemeToggle from '../../components/ThemeToggle';
+import ProtectedRoute from '../../components/ProtectedRoute';
 import OrganizationSearch from '../../components/OrganizationSearch';
-import { FormField, FormButton, ErrorMessage, SuccessMessage } from '../../components/shared';
-import { useForm } from '../../hooks';
+import { SimpleInput, SimpleTextarea, FormButton, ErrorMessage, SuccessMessage } from '../../components/shared';
+import { useForm } from 'react-hook-form';
 import { CreateActivityForm, Organization } from '../../types/common';
-import { validators } from '../../utils/common';
 import { postApi } from '../../utils/api';
 import { FileText, Plus, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/app/contexts/AuthContext';
 
 export default function CreateActivityPage() {
-  const router = useRouter();
   const { user } = useAuth();
   const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
   
-  const { data, loading, error, success, handleChange, handleSubmit } = useForm<CreateActivityForm>({
-    initialData: {
+  const { register, handleSubmit, formState: { errors, isSubmitting }, setValue, watch } = useForm<CreateActivityForm>({
+    defaultValues: {
       orgId: 0,
       visitDate: '',
       startTime: '',
       endTime: '',
       description: ''
-    },
-    validate: (data) => {
-      const errors: Record<keyof CreateActivityForm, string | null> = {
-        orgId: null,
-        visitDate: null,
-        startTime: null,
-        endTime: null,
-        description: null
-      };
+    }
+  });
 
-      if (!selectedOrg) {
-        errors.orgId = 'Выберите организацию';
-      }
-      
-      errors.visitDate = validators.required(data.visitDate, 'Дата визита');
-      errors.startTime = validators.required(data.startTime, 'Время начала') || 
-                        validators.timeFormat24(data.startTime);
-      errors.endTime = validators.required(data.endTime, 'Время окончания') || 
-                      validators.timeFormat24(data.endTime);
-      
-      const timeRangeError = validators.timeRange(data.startTime, data.endTime);
-      if (timeRangeError) {
-        errors.endTime = timeRangeError;
-      }
+  const startTime = watch('startTime');
 
-      return errors;
-    },
-    onSubmit: async (data) => {
-      if (!user) throw new Error('Пользователь не авторизован');
-      if (!selectedOrg) throw new Error('Выберите организацию');
+  const onSubmit = async (data: CreateActivityForm) => {
+    if (!user) {
+      setError('Пользователь не авторизован');
+      return;
+    }
+    
+    if (!selectedOrg) {
+      setError('Выберите организацию');
+      return;
+    }
 
+    setError(null);
+    setSuccess(false);
+
+    try {
       const payload = {
         usrId: user.id,
         orgId: selectedOrg.orgId,
@@ -66,29 +55,26 @@ export default function CreateActivityPage() {
       };
 
       await postApi('/activ', payload);
-
-      router.push('/activities');
+      setSuccess(true);
+      
+      // Перенаправление через 2 секунды
+      setTimeout(() => {
+        window.location.href = '/activities';
+      }, 2000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Произошла ошибка');
     }
-  });
+  };
 
   const handleOrgSelect = (org: Organization | null) => {
     if (!org) return;
     setSelectedOrg(org);
-    handleChange({
-      target: {
-        name: 'orgId',
-        value: org.orgId.toString()
-      }
-    } as React.ChangeEvent<HTMLInputElement>);
+    setValue('orgId', org.orgId);
   };
 
-  if (!user) {
-    router.push('/login');
-    return null;
-  }
-
   return (
-    <div className="min-h-screen" style={{ background: 'var(--background)' }}>
+    <ProtectedRoute>
+      <div className="min-h-screen" style={{ background: 'var(--background)' }}>
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Навигация */}
         <div className="flex items-center justify-between mb-8">
@@ -116,7 +102,7 @@ export default function CreateActivityPage() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
             {/* Выбор организации */}
             <div>
               <OrganizationSearch onSelect={handleOrgSelect} />
@@ -137,33 +123,42 @@ export default function CreateActivityPage() {
 
             {/* Дата и время */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <FormField
-                name="visitDate"
+              <SimpleInput
+                {...register('visitDate', { 
+                  required: 'Дата визита обязательна' 
+                })}
                 type="date"
                 label="Дата визита"
+                error={errors.visitDate?.message}
                 required
-                value={data.visitDate}
-                onChange={handleChange}
               />
 
-              <FormField
-                name="startTime"
+              <SimpleInput
+                {...register('startTime', { 
+                  required: 'Время начала обязательно' 
+                })}
                 type="time"
                 label="Время начала"
-                required
-                value={data.startTime}
-                onChange={handleChange}
                 placeholder="09:00"
+                error={errors.startTime?.message}
+                required
               />
 
-              <FormField
-                name="endTime"
+              <SimpleInput
+                {...register('endTime', { 
+                  required: 'Время окончания обязательно',
+                  validate: (value) => {
+                    if (startTime && value && value <= startTime) {
+                      return 'Время окончания должно быть позже времени начала';
+                    }
+                    return true;
+                  }
+                })}
                 type="time"
                 label="Время окончания"
-                required
-                value={data.endTime}
-                onChange={handleChange}
                 placeholder="18:00"
+                error={errors.endTime?.message}
+                required
               />
             </div>
             
@@ -172,13 +167,11 @@ export default function CreateActivityPage() {
             </div>
 
             {/* Описание */}
-            <FormField
-              name="description"
-              type="textarea"
+            <SimpleTextarea
+              {...register('description')}
               label="Описание"
-              value={data.description}
-              onChange={handleChange}
               placeholder="Опишите детали визита..."
+              error={errors.description?.message}
             />
 
             {/* Сообщения об ошибках и успехе */}
@@ -189,7 +182,7 @@ export default function CreateActivityPage() {
             <div className="flex justify-end">
               <FormButton
                 type="submit"
-                loading={loading}
+                loading={isSubmitting}
                 loadingText="Создание..."
                 className="w-full md:w-auto px-8"
               >
@@ -199,7 +192,8 @@ export default function CreateActivityPage() {
             </div>
           </form>
         </div>
+        </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }

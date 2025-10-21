@@ -1,5 +1,5 @@
 // Shared components
-export { FormField } from './FormField';
+export { SimpleInput, SimpleTextarea } from './SimpleFields';
 export { FormButton } from './FormButton';
 export { LoadingSpinner } from './LoadingSpinner';
 export { LoadingWrapper } from './LoadingWrapper';

@@ -11,6 +11,7 @@ export interface User {
 export interface LoginForm {
   login: string;
   password: string;
+  [key: string]: unknown;
 }
 
 export interface RegisterForm {
@@ -20,12 +21,14 @@ export interface RegisterForm {
   login: string;
   password: string;
   confirmPassword: string;
+  [key: string]: unknown;
 }
 
 export interface PasswordChangeForm {
   currentPassword: string;
   newPassword: string;
   confirmPassword: string;
+  [key: string]: unknown;
 }
 
 // Типы для активностей
@@ -57,6 +60,7 @@ export interface CreateActivityForm {
   startTime: string;
   endTime: string;
   description: string;
+  [key: string]: unknown;
 }
 
 export interface UpdateActivityForm {

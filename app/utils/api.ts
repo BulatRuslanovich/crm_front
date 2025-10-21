@@ -10,10 +10,15 @@ interface ApiOptions {
 class ApiClient {
   private baseUrl: string;
   private getAuthHeaders: () => Record<string, string>;
+  private refreshTokenCallback?: () => Promise<boolean>;
 
   constructor(baseUrl: string, getAuthHeaders: () => Record<string, string>) {
     this.baseUrl = baseUrl;
     this.getAuthHeaders = getAuthHeaders;
+  }
+
+  setRefreshTokenCallback(callback: () => Promise<boolean>) {
+    this.refreshTokenCallback = callback;
   }
 
   async request(endpoint: string, options: ApiOptions = {}) {
@@ -44,7 +49,28 @@ class ApiClient {
       config.body = JSON.stringify(body);
     }
 
-    const response = await fetch(url, config);
+    let response = await fetch(url, config);
+
+    if (response.status === 401 && requireAuth && this.refreshTokenCallback) {
+      const refreshed = await this.refreshTokenCallback();
+      
+      if (refreshed) {
+        const newHeaders = {
+          ...requestHeaders,
+          ...this.getAuthHeaders()
+        };
+        
+        const newConfig: RequestInit = {
+          ...config,
+          headers: newHeaders
+        };
+        
+        response = await fetch(url, newConfig);
+      } else {
+        window.location.href = '/login';
+        throw new Error('Authentication failed');
+      }
+    }
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -77,6 +103,12 @@ let apiClient: ApiClient | null = null;
 
 export function initApi(baseUrl: string, getAuthHeaders: () => Record<string, string>) {
   apiClient = new ApiClient(baseUrl, getAuthHeaders);
+}
+
+export function setRefreshTokenCallback(callback: () => Promise<boolean>) {
+  if (apiClient) {
+    apiClient.setRefreshTokenCallback(callback);
+  }
 }
 
 export function api() {

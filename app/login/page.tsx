@@ -3,10 +3,9 @@
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ThemeToggle from '../components/ThemeToggle';
-import { FormField, FormButton, ErrorMessage } from '../components/shared';
-import { useForm } from '../hooks';
+import { SimpleInput, FormButton } from '../components/shared';
+import { useForm } from 'react-hook-form';
 import { LoginForm } from '../types/common';
-import { validators } from '../utils/common';
 import { postApi } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -14,16 +13,15 @@ export default function LoginPage() {
   const router = useRouter();
   const { setTokens, setUser } = useAuth();
   
-  const { data, loading, error, handleChange, handleSubmit } = useForm<LoginForm>({
-    initialData: {
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginForm>({
+    defaultValues: {
       login: '',
       password: ''
-    },
-    validate: (data) => ({
-      login: validators.required(data.login, 'Логин'),
-      password: validators.required(data.password, 'Пароль')
-    }),
-    onSubmit: async (data) => {
+    }
+  });
+
+  const onSubmit = async (data: LoginForm) => {
+    try {
       const result = await postApi('/user/login', data, false);
       setTokens({
         accessToken: result.accessToken,
@@ -31,8 +29,10 @@ export default function LoginPage() {
       });
       setUser(result.user);
       router.push('/');
+    } catch (error) {
+      console.error('Login error:', error);
     }
-  });
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--background)' }}>
@@ -52,33 +52,34 @@ export default function LoginPage() {
             </p>
           </div>
           
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <div className="space-y-4">
-              <FormField
-                name="login"
-                type="text"
+              <SimpleInput
+                {...register('login', { 
+                  required: 'Логин обязателен',
+                  minLength: { value: 3, message: 'Минимум 3 символа' }
+                })}
                 label="Логин"
-                required
-                value={data.login}
-                onChange={handleChange}
                 placeholder="Введите логин"
+                error={errors.login?.message}
+                required
               />
-              <FormField
-                name="password"
+              <SimpleInput
+                {...register('password', { 
+                  required: 'Пароль обязателен',
+                  minLength: { value: 4, message: 'Минимум 4 символа' }
+                })}
                 type="password"
                 label="Пароль"
-                required
-                value={data.password}
-                onChange={handleChange}
                 placeholder="Введите пароль"
+                error={errors.password?.message}
+                required
               />
             </div>
 
-            <ErrorMessage message={error || ''} />
-
             <FormButton
               type="submit"
-              loading={loading}
+              loading={isSubmitting}
               loadingText="Вход..."
             >
               Войти
