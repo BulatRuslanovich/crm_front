@@ -65,7 +65,6 @@ jobs:
       - name: Build
         run: npm run build
 
-
       - name: Security scan (dependencies)
         run: |
           npm audit --audit-level=moderate 2>&1 | tee security-report.txt

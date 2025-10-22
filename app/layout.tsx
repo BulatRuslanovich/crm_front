@@ -17,7 +17,7 @@ export default function RootLayout({
   return (
     <html lang='ru' suppressHydrationWarning>
       <head></head>
-      <body className="antialiased">
+      <body className='antialiased'>
         <ThemeProvider>
           <AuthProvider>{children}</AuthProvider>
         </ThemeProvider>
