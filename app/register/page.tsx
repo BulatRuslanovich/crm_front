@@ -3,11 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/authContext";
 
-const BASE_URL = process.env.BASE_API_URL || "http://localhost:5555";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5555";
 
 const RegisterPage = () => {
   const router = useRouter();
+  const { refreshAuth } = useAuth();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -59,14 +61,9 @@ const RegisterPage = () => {
       return;
     }
 
-    const data = await response.json();
+    await refreshAuth();
 
-    if (data.usrId) {
-      localStorage.setItem('userId', data.usrId.toString());
-      localStorage.setItem('userLogin', data.login);
-    }
-
-    router.push('/');
+    router.push('/dashboard');
   };
 
   return (
@@ -76,7 +73,7 @@ const RegisterPage = () => {
           <h2 className="text-3xl font-bold text-center mb-2">Регистрация</h2>
 
             {error && (
-            <div className="bg-red-500/20 border border-red-500/50 text-red-400 rounded-lg p-3 mb-4 text-sm whitespace-pre-line">
+            <div className=" mt-4 bg-red-500/20 border border-red-500/50 text-red-400 rounded-lg p-3 mb-4 text-sm whitespace-pre-line">
               {error}
             </div>
           )}
